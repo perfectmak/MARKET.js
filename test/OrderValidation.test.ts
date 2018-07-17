@@ -109,6 +109,72 @@ describe('Order Validation', async () => {
     });
   });
 
+  it('Checks if maker has approved enough fees', async () => {
+    const feeRecipient = web3.eth.accounts[5];
+    fees = new BigNumber(100);
+
+    // transfer enough MKT to maker for fees
+    await market.mktTokenContract.transferTx(maker, fees).send({ from: deploymentAddress });
+
+    const signedOrder = await createSignedOrderAsync(
+      web3.currentProvider,
+      orderLibAddress,
+      contractAddress,
+      new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
+      feeRecipient,
+      maker,
+      fees,
+      constants.NULL_ADDRESS,
+      fees,
+      orderQty,
+      price,
+      orderQty,
+      Utils.generatePseudoRandomSalt()
+    );
+
+    await expect(
+      market.tradeOrderAsync(signedOrder, new BigNumber(2), {
+        from: taker,
+        gas: 400000
+      })
+    ).rejects.toThrow(new Error(MarketError.InsufficientAllowanceForTransfer));
+  });
+
+  it('Checks if taker has approved enough fees', async () => {
+    const feeRecipient = web3.eth.accounts[5];
+    fees = new BigNumber(100);
+
+    // transfer enough MKT to maker and takers for fees
+    await market.mktTokenContract.transferTx(maker, fees).send({ from: deploymentAddress });
+    await market.mktTokenContract.transferTx(taker, fees).send({ from: deploymentAddress });
+
+    // maker approves token for fees
+    await market.mktTokenContract.approveTx(feeRecipient, fees).send({ from: maker });
+
+    const signedOrder = await createSignedOrderAsync(
+      web3.currentProvider,
+      orderLibAddress,
+      contractAddress,
+      new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
+      feeRecipient,
+      maker,
+      fees,
+      constants.NULL_ADDRESS,
+      fees,
+      orderQty,
+      price,
+      orderQty,
+      Utils.generatePseudoRandomSalt()
+    );
+
+    await expect(
+      market.tradeOrderAsync(signedOrder, new BigNumber(2), {
+        from: taker,
+        gas: 400000
+      })
+    ).rejects.toThrow(new Error(MarketError.InsufficientAllowanceForTransfer));
+  });
+
   it('Checks sufficient collateral balances', async () => {
     // Withdraw maker's collateral so that balance is not enough to trade
     await withdrawCollateralAsync(web3.currentProvider, collateralPoolAddress, initialCredit, {

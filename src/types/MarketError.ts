@@ -14,5 +14,6 @@ export enum MarketError {
   InvalidTaker = 'INVALID_TAKER',
   OrderExpired = 'ORDER_EXPIRED',
   OrderFilledOrCancelled = 'ORDER_FILLED_OR_CANCELLED',
-  BuySellMismatch = 'BUY/SELL MISMATCH'
+  BuySellMismatch = 'BUY/SELL MISMATCH',
+  ContractAlreadySettled = 'CONTRACT_ALREADY_SETTLED'
 }
