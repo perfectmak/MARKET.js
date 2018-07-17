@@ -21,7 +21,7 @@ import {
 
 import { createSignedOrderAsync } from '../src/lib/Order';
 
-import { getContractAddress } from './utils';
+import { createEVMSnapshot, getContractAddress, restoreEVMSnapshot } from './utils';
 
 describe('Order Validation', async () => {
   let web3;
@@ -42,6 +42,7 @@ describe('Order Validation', async () => {
   let fees: BigNumber;
   let orderQty: BigNumber;
   let price: BigNumber;
+  let snapshotId: string;
 
   beforeAll(async () => {
     jest.setTimeout(30000);
@@ -81,6 +82,7 @@ describe('Order Validation', async () => {
   });
 
   beforeEach(async () => {
+    snapshotId = await createEVMSnapshot(web3);
     // Transfer initial credit amount of tokens to maker and deposit as collateral
     await collateralToken.transferTx(maker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
@@ -90,23 +92,7 @@ describe('Order Validation', async () => {
   });
 
   afterEach(async () => {
-    // Clean up. Withdraw all maker's and taker's collateral.
-    let makerCollateral = await getUserAccountBalanceAsync(
-      web3.currentProvider,
-      collateralPoolAddress,
-      maker
-    );
-    let takerCollateral = await getUserAccountBalanceAsync(
-      web3.currentProvider,
-      collateralPoolAddress,
-      taker
-    );
-    await withdrawCollateralAsync(web3.currentProvider, collateralPoolAddress, makerCollateral, {
-      from: maker
-    });
-    await withdrawCollateralAsync(web3.currentProvider, collateralPoolAddress, takerCollateral, {
-      from: taker
-    });
+    await restoreEVMSnapshot(web3, snapshotId);
   });
 
   it('Checks if maker has approved enough fees', async () => {

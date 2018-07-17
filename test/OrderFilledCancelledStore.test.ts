@@ -17,6 +17,7 @@ import { createOrderHashAsync, createSignedOrderAsync } from '../src/lib/Order';
 import { OrderFilledCancelledLazyStore } from '../src/OrderFilledCancelledLazyStore';
 import { JSONRPCResponsePayload } from '@0xproject/types';
 import { MARKETProtocolConfig } from '../src/types';
+import { createEVMSnapshot, restoreEVMSnapshot } from './utils';
 
 describe('Order filled/cancelled store', async () => {
   let web3: Web3;
@@ -95,24 +96,7 @@ describe('Order filled/cancelled store', async () => {
 
   beforeEach(async () => {
     // get a snapshot of the current state of the local blockchain
-    snapshotId = await new Promise<string>((resolve, reject) => {
-      web3.currentProvider.sendAsync(
-        {
-          jsonrpc: '2.0',
-          method: 'evm_snapshot',
-          params: [],
-          id: new Date().getTime()
-        },
-        (err: Error | null, response?: JSONRPCResponsePayload) => {
-          if (err) {
-            reject(err);
-          }
-          if (response) {
-            resolve(response.result);
-          }
-        }
-      );
-    });
+    snapshotId = await createEVMSnapshot(web3);
     await collateralToken.transferTx(maker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
     await depositCollateralAsync(web3.currentProvider, collateralPoolAddress, initialCredit, {
@@ -128,24 +112,7 @@ describe('Order filled/cancelled store', async () => {
   afterEach(async () => {
     // revert the local blockchain to the state before the test occurred in order to clean up
     // the environment for further testing.
-    await new Promise<string>((resolve, reject) => {
-      web3.currentProvider.sendAsync(
-        {
-          jsonrpc: '2.0',
-          method: 'evm_revert',
-          params: [snapshotId],
-          id: new Date().getTime()
-        },
-        (err: Error | null, response?: JSONRPCResponsePayload) => {
-          if (err) {
-            reject(err);
-          }
-          if (response) {
-            resolve(response.result);
-          }
-        }
-      );
-    });
+    await restoreEVMSnapshot(web3, snapshotId);
   });
 
   it('Returns the uncached quantity', async () => {
