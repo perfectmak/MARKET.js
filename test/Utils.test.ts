@@ -1,11 +1,11 @@
 import { BigNumber } from 'bignumber.js';
 import Web3 from 'web3';
+// @ts-ignore // allow any type for web3-fake-provider.
 import FakeProvider from 'web3-fake-provider';
 
 // Types
 import { ECSignature } from '@marketprotocol/types';
-
-import { Utils, Web3Utils } from '../src/lib/Utils';
+import { Utils } from '../src';
 
 /**
  * Utils

@@ -1,6 +1,6 @@
 import { Schema } from 'jsonschema';
 import * as _ from 'lodash';
-import { BigNumber } from 'bignumber.js';
+import BigNumber from 'bignumber.js';
 import Web3 from 'web3';
 import util from 'util';
 

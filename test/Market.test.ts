@@ -6,7 +6,7 @@ import { constants } from '../src/constants';
 import { BigNumber } from 'bignumber.js';
 
 // types
-import { MARKETProtocolConfig } from '@marketprotocol/types';
+import { MARKETProtocolConfig } from '../src/types';
 
 /**
  * Test for a valid address format.

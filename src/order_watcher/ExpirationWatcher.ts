@@ -1,4 +1,4 @@
-import { BigNumber } from 'bignumber.js';
+import BigNumber from 'bignumber.js';
 import { RBTree } from 'bintrees';
 import * as _ from 'lodash';
 

@@ -1,4 +1,5 @@
 import BigNumber from 'bignumber.js';
+// @ts-ignore
 import FakeProvider from 'web3-fake-provider';
 import Web3 from 'web3';
 

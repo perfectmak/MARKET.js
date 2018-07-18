@@ -2,11 +2,12 @@ import { BigNumber } from 'bignumber.js';
 import Web3 from 'web3';
 
 // Types
-import { ITxParams, MarketContractOraclize, MARKETProtocolConfig } from '@marketprotocol/types';
+import { ITxParams, MarketContractOraclize } from '@marketprotocol/types';
 
 import { Market } from '../src';
 import { constants } from '../src/constants';
 import { getContractAddress } from './utils';
+import { MARKETProtocolConfig } from '../src/types';
 
 describe('Deployment Tests', () => {
   const GAS_LIMIT = 4000000;

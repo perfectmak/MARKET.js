@@ -1,14 +1,8 @@
 import Web3 from 'web3';
 import BigNumber from 'bignumber.js';
 // Types
-import {
-  ERC20,
-  MarketCollateralPool,
-  MarketContract,
-  MARKETProtocolConfig,
-  SignedOrder
-} from '@marketprotocol/types';
-import { MarketError } from '../src/types';
+import { ERC20, MarketCollateralPool, MarketContract, SignedOrder } from '@marketprotocol/types';
+import { MarketError, MARKETProtocolConfig } from '../src/types';
 
 import { Market, Utils } from '../src';
 import { constants } from '../src/constants';
@@ -24,7 +18,7 @@ import { createSignedOrderAsync } from '../src/lib/Order';
 import { createEVMSnapshot, getContractAddress, restoreEVMSnapshot } from './utils';
 
 describe('Order Validation', async () => {
-  let web3;
+  let web3: Web3;
   let config: MARKETProtocolConfig;
   let market: Market;
   let orderLibAddress: string;
@@ -36,7 +30,7 @@ describe('Order Validation', async () => {
   let deployedMarketContract: MarketContract;
   let collateralTokenAddress: string;
   let collateralToken: ERC20;
-  let collateralPoolAddress;
+  let collateralPoolAddress: string;
   let collateralPool;
   let initialCredit: BigNumber;
   let fees: BigNumber;

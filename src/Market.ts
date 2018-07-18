@@ -1,4 +1,4 @@
-import { BigNumber } from 'bignumber.js';
+import BigNumber from 'bignumber.js';
 import Web3 from 'web3';
 
 // Types
@@ -17,7 +17,6 @@ import {
 import { MARKETProtocolConfig } from './types';
 
 import { assert } from './assert';
-import { constants } from './constants';
 import { ERC20TokenContractWrapper } from './contract_wrappers/ERC20TokenContractWrapper';
 import { MarketContractOraclizeWrapper } from './contract_wrappers/MarketContractOraclizeWrapper';
 
@@ -60,7 +59,9 @@ export class Market {
   // wrappers
   public marketContractWrapper: MarketContractOraclizeWrapper;
   public erc20TokenContractWrapper: ERC20TokenContractWrapper;
-  public readonly artifacts: MARKETProtocolArtifacts;
+
+  // Config
+  public readonly config: MARKETProtocolConfig;
 
   private readonly _web3: Web3;
   // endregion // members
@@ -82,40 +83,42 @@ export class Market {
 
     this._web3 = new Web3();
     this._web3.setProvider(provider);
-    this.artifacts = new MARKETProtocolArtifacts(config.networkId);
 
-    this._updateConfigFromArtifacts(config);
+    if (
+      !config.marketContractRegistryAddress &&
+      !config.marketTokenAddress &&
+      !config.marketContractFactoryAddress &&
+      !config.marketCollateralPoolFactoryAddress &&
+      !config.mathLibAddress &&
+      !config.orderLibAddress
+    ) {
+      this._updateConfigFromArtifacts(config);
+    }
 
-    this.marketContractRegistry = new MarketContractRegistry(
-      this._web3,
-      config.marketContractRegistryAddress
-        ? config.marketContractRegistryAddress
-        : this.artifacts.marketTokenArtifact.networks[config.networkId].address
-    );
+    // Set updated config with artifacts addresses
+    this.config = config;
 
-    this.mktTokenContract = new MarketToken(
-      this._web3,
-      config.marketTokenAddress ? config.marketTokenAddress : constants.NULL_ADDRESS
-    );
+    // Disabled TSLint and added @ts-ignore to suppress the undefined error for optional config param
+    /* tslint:disable */
+    // prettier-ignore
+    // @ts-ignore
+    this.marketContractRegistry = new MarketContractRegistry(this._web3, config.marketContractRegistryAddress);
 
-    this.marketContractFactory = new MarketContractFactoryOraclize(
-      this._web3,
-      config.marketContractFactoryAddress
-        ? config.marketContractFactoryAddress
-        : constants.NULL_ADDRESS
-    );
+    // prettier-ignore
+    // @ts-ignore
+    this.mktTokenContract = new MarketToken(this._web3, config.marketTokenAddress);
 
-    this.marketCollateralPoolFactory = new MarketCollateralPoolFactory(
-      this._web3,
-      config.marketCollateralPoolFactoryAddress
-        ? config.marketCollateralPoolFactoryAddress
-        : constants.NULL_ADDRESS
-    );
+    // prettier-ignore
+    // @ts-ignore
+    this.marketContractFactory = new MarketContractFactoryOraclize(this._web3, config.marketContractFactoryAddress);
 
-    this.orderLib = new OrderLib(
-      this._web3,
-      config.orderLibAddress ? config.orderLibAddress : constants.NULL_ADDRESS
-    );
+    // prettier-ignore
+    // @ts-ignore
+    this.marketCollateralPoolFactory = new MarketCollateralPoolFactory(this._web3, config.marketCollateralPoolFactoryAddress);
+
+    // @ts-ignore prettier-ignore
+    this.orderLib = new OrderLib(this._web3, config.orderLibAddress);
+    /* tslint:enable */
 
     this.erc20TokenContractWrapper = new ERC20TokenContractWrapper(this._web3);
     this.marketContractWrapper = new MarketContractOraclizeWrapper(this._web3);
@@ -500,45 +503,22 @@ export class Market {
    * @private
    */
   private _updateConfigFromArtifacts(config: MARKETProtocolConfig): MARKETProtocolConfig {
-    if (
-      !config.marketContractRegistryAddress &&
-      this.artifacts.marketContractRegistryArtifact.networks[config.networkId]
-    ) {
-      config.marketContractRegistryAddress = this.artifacts.marketContractRegistryArtifact.networks[
-        config.networkId
-      ].address;
-    }
+    const artifacts = new MARKETProtocolArtifacts(config.networkId);
 
-    if (
-      !config.marketTokenAddress &&
-      this.artifacts.marketTokenArtifact.networks[config.networkId]
-    ) {
-      config.marketTokenAddress = this.artifacts.marketTokenArtifact.networks[
-        config.networkId
-      ].address;
-    }
+    config.marketContractRegistryAddress =
+      artifacts.marketContractRegistryArtifact.networks[config.networkId].address;
 
-    if (
-      !config.marketContractFactoryAddress &&
-      this.artifacts.marketContractFactoryOraclizeArtifact.networks[config.networkId]
-    ) {
-      config.marketContractFactoryAddress = this.artifacts.marketContractFactoryOraclizeArtifact.networks[
-        config.networkId
-      ].address;
-    }
+    config.marketTokenAddress = artifacts.marketTokenArtifact.networks[config.networkId].address;
 
-    if (
-      !config.marketCollateralPoolFactoryAddress &&
-      this.artifacts.marketCollateralPoolFactoryArtifact.networks[config.networkId]
-    ) {
-      config.marketCollateralPoolFactoryAddress = this.artifacts.marketCollateralPoolFactoryArtifact.networks[
-        config.networkId
-      ].address;
-    }
+    config.marketContractFactoryAddress =
+      artifacts.marketContractFactoryOraclizeArtifact.networks[config.networkId].address;
 
-    if (!config.orderLibAddress && this.artifacts.orderLibArtifact.networks[config.networkId]) {
-      config.orderLibAddress = this.artifacts.orderLibArtifact.networks[config.networkId].address;
-    }
+    config.marketCollateralPoolFactoryAddress =
+      artifacts.marketCollateralPoolFactoryArtifact.networks[config.networkId].address;
+
+    config.mathLibAddress = artifacts.mathLibArtifact.networks[config.networkId].address;
+
+    config.orderLibAddress = artifacts.orderLibArtifact.networks[config.networkId].address;
 
     return config;
   }

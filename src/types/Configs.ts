@@ -1,3 +1,5 @@
+import BigNumber from 'bignumber.js';
+
 /**
  * networkId: The id of the underlying ethereum network your provider is connected to.
  * (1-mainnet, 3-ropsten, 4-rinkeby, 42-kovan, 50-testrpc)
