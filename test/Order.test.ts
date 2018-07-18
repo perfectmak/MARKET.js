@@ -22,7 +22,8 @@ import {
   signOrderHashAsync
 } from '../src/lib/Order';
 
-import { getContractAddress } from './utils';
+import { createEVMSnapshot, getContractAddress, restoreEVMSnapshot } from './utils';
+import { MarketError } from '../src/types';
 
 /**
  * Order
@@ -35,6 +36,7 @@ describe('Order', () => {
   let market: Market;
   let orderLibAddress: string;
   let contractAddress: string;
+  let snapshotId: string;
 
   beforeAll(async () => {
     market = new Market(web3.currentProvider, config);
@@ -42,6 +44,14 @@ describe('Order', () => {
     const contractAddresses: string[] = await market.marketContractRegistry.getAddressWhiteList;
     contractAddress = contractAddresses[0];
     jest.setTimeout(30000);
+  });
+
+  beforeEach(async () => {
+    snapshotId = await createEVMSnapshot(web3);
+  });
+
+  afterEach(async () => {
+    await restoreEVMSnapshot(web3, snapshotId);
   });
 
   describe('createSignedOrderAsync', () => {
@@ -396,6 +406,75 @@ describe('Order', () => {
         gas: 400000
       })
     ).toEqual(new BigNumber(cancelQty));
+  });
+
+  it('Returns error for dead orders', async () => {
+    const expirationTimestamp = new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60);
+    const maker = web3.eth.accounts[1];
+    const taker = web3.eth.accounts[2];
+    const deploymentAddress = web3.eth.accounts[0];
+
+    const deployedMarketContract: MarketContract = await MarketContract.createAndValidate(
+      web3,
+      contractAddress
+    );
+
+    const collateralTokenAddress: string = await deployedMarketContract.COLLATERAL_TOKEN_ADDRESS;
+    const collateralToken: ERC20 = await ERC20.createAndValidate(web3, collateralTokenAddress);
+    const initialCredit: BigNumber = new BigNumber(1e23).times(3);
+
+    // Both maker and taker account need enough tokens for collateral.  Our deployment address
+    // should have all of the tokens and be able to send them.
+    await collateralToken.transferTx(maker, initialCredit).send({ from: deploymentAddress });
+    await collateralToken.transferTx(taker, initialCredit).send({ from: deploymentAddress });
+
+    // now both maker and taker addresses need to deposit collateral into the collateral pool.
+    const collateralPoolAddress = await deployedMarketContract.MARKET_COLLATERAL_POOL_ADDRESS;
+    await MarketCollateralPool.createAndValidate(web3, collateralPoolAddress);
+
+    await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
+    await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
+
+    await depositCollateralAsync(web3.currentProvider, collateralPoolAddress, initialCredit, {
+      from: maker
+    });
+    await depositCollateralAsync(web3.currentProvider, collateralPoolAddress, initialCredit, {
+      from: taker
+    });
+
+    const fees: BigNumber = new BigNumber(0);
+    const orderQty: BigNumber = new BigNumber(2);
+    const price: BigNumber = new BigNumber(100000);
+
+    const signedOrder: SignedOrder = await createSignedOrderAsync(
+      web3.currentProvider,
+      orderLibAddress,
+      contractAddress,
+      expirationTimestamp,
+      constants.NULL_ADDRESS,
+      maker,
+      fees,
+      constants.NULL_ADDRESS,
+      fees,
+      orderQty,
+      price,
+      orderQty,
+      Utils.generatePseudoRandomSalt()
+    );
+
+    // first, fill orders
+    await market.tradeOrderAsync(signedOrder, new BigNumber(2), {
+      from: taker,
+      gas: 400000
+    });
+
+    // try filling empty orders show error out
+    await expect(
+      market.tradeOrderAsync(signedOrder, new BigNumber(2), {
+        from: taker,
+        gas: 400000
+      })
+    ).rejects.toThrow(new Error(MarketError.OrderDead));
   });
 
   it('Gets qty filled or cancelled from order', async () => {

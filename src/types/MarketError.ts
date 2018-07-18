@@ -13,6 +13,8 @@ export enum MarketError {
   SubscriptionAlreadyPresent = 'SUBSCRIPTION_ALREADY_PRESENT',
   InvalidTaker = 'INVALID_TAKER',
   OrderExpired = 'ORDER_EXPIRED',
+  OrderDead = 'ORDER_DEAD',
+  UnknownOrderError = 'UNKNOWN_ORDER_ERROR',
   OrderFilledOrCancelled = 'ORDER_FILLED_OR_CANCELLED',
   BuySellMismatch = 'BUY/SELL MISMATCH',
   ContractAlreadySettled = 'CONTRACT_ALREADY_SETTLED'

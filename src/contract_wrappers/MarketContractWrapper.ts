@@ -21,6 +21,9 @@ export class MarketContractWrapper {
   // *****************************************************************
   // ****                     Members                             ****
   // *****************************************************************
+  readonly ORDER_EXPIRED_CODE = '0';
+  readonly ORDER_DEAD_CODE = '1';
+
   protected readonly _web3: Web3;
   private readonly _marketContractsByAddress: { [address: string]: MarketContract };
 
@@ -293,6 +296,32 @@ export class MarketContractWrapper {
             stopEventWatcher()
               .then(function() {
                 return resolve(eventLog.args.filledQty);
+              })
+              .catch(reject);
+          }
+        });
+
+      const stopErrorEventWatcher = marketContract
+        .ErrorEvent({})
+        .watch({ fromBlock: blockNumber, toBlock: blockNumber }, (err, eventLog) => {
+          if (err) {
+            console.log(err);
+            reject(err);
+            return;
+          }
+
+          if (eventLog.transactionHash === txHash) {
+            stopErrorEventWatcher()
+              .then(stopEventWatcher)
+              .then(() => {
+                switch (eventLog.args.errorCode.toString()) {
+                  case this.ORDER_EXPIRED_CODE:
+                    return reject(new Error(MarketError.OrderExpired));
+                  case this.ORDER_DEAD_CODE:
+                    return reject(new Error(MarketError.OrderDead));
+                  default:
+                    return reject(new Error(MarketError.UnknownOrderError));
+                }
               })
               .catch(reject);
           }
