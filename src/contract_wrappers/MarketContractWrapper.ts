@@ -21,8 +21,8 @@ export class MarketContractWrapper {
   // *****************************************************************
   // ****                     Members                             ****
   // *****************************************************************
-  readonly ORDER_EXPIRED_CODE = '0';
-  readonly ORDER_DEAD_CODE = '1';
+  static readonly ORDER_EXPIRED_CODE = '0';
+  static readonly ORDER_DEAD_CODE = '1';
 
   protected readonly _web3: Web3;
   private readonly _marketContractsByAddress: { [address: string]: MarketContract };
@@ -315,9 +315,9 @@ export class MarketContractWrapper {
               .then(stopEventWatcher)
               .then(() => {
                 switch (eventLog.args.errorCode.toString()) {
-                  case this.ORDER_EXPIRED_CODE:
+                  case MarketContractWrapper.ORDER_EXPIRED_CODE:
                     return reject(new Error(MarketError.OrderExpired));
-                  case this.ORDER_DEAD_CODE:
+                  case MarketContractWrapper.ORDER_DEAD_CODE:
                     return reject(new Error(MarketError.OrderDead));
                   default:
                     return reject(new Error(MarketError.UnknownOrderError));
