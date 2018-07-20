@@ -15,10 +15,10 @@ export const configTruffle = {
 
 export const configRinkeby: MARKETProtocolConfig = {
   networkId: constants.NETWORK_ID_RINKEBY,
-  marketContractRegistryAddress: '0x4bc60737323fd065d99c726ca2c0fad0d1077a60',
-  marketContractFactoryAddress: '0x9d904712cf622d3bfeacb5282a51a0ad1418f9a3',
-  marketCollateralPoolFactoryAddress: '0x011176b12c962b3d65049b0b8358d8e9132223f1',
-  marketTokenAddress: '0xffa7d6c01f8b40eb26a5ffbde9d6b5daeebb980e',
+  marketContractRegistryAddress: '0x7d395038802ae4b7a4c502ce3dfe1f26867b3391',
+  marketContractFactoryAddress: '0x361741692e3ce0209924fb4c882321ab852dd5d4',
+  marketCollateralPoolFactoryAddress: '0x3e69935694cdb936bf0b281e62b4087cfcb063bb',
+  marketTokenAddress: '0x38c0388e9a93bc3d3e793116d0d2793e4388311d',
   mathLibAddress: '0xb81be132a7e73814958e7acae89bff7b7249e910',
   orderLibAddress: '0xc54c646d3dd0b78b45c4bbb8834e3fbf2d28b820'
 };
