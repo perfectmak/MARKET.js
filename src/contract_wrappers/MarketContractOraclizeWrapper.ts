@@ -4,6 +4,7 @@ import Web3 from 'web3';
 // Types
 import { MarketContractOraclize } from '@marketprotocol/types';
 import { MarketContractWrapper } from './MarketContractWrapper';
+import BigNumber from 'bignumber.js';
 
 /**
  * Wrapper for our MarketContractOraclize objects.  This wrapper exposes all needed functionality of the
@@ -40,14 +41,41 @@ export class MarketContractOraclizeWrapper extends MarketContractWrapper {
   /**
    * Gets the MarketContract oracle query.
    * @param {string} marketContractOraclizeAddress   Address of the contract
-   * @returns Promise<string>                        The oracle query
+   * @returns {Promise<string>}                      The oracle query
    */
-  public async getOracleQuery(marketContractOraclizeAddress: string): Promise<string> {
+  public async getOracleQueryAsync(marketContractOraclizeAddress: string): Promise<string> {
     const marketContractOraclize: MarketContractOraclize = await this._getMarketContractAsync(
       marketContractOraclizeAddress
     );
     return marketContractOraclize.ORACLE_QUERY;
   }
+
+  /**
+   * Gets the MarketContract expiration.
+   * @param {string} marketContractOraclizeAddress   Address of the contract
+   * @returns {Promise<BigNumber>}                   Expiration timestamp
+   */
+  public async getContractExpirationAsync(
+    marketContractOraclizeAddress: string
+  ): Promise<BigNumber> {
+    const marketContractOraclize: MarketContractOraclize = await this._getMarketContractAsync(
+      marketContractOraclizeAddress
+    );
+    return marketContractOraclize.EXPIRATION;
+  }
+
+  /**
+   * Gets the MarketContract expiration.
+   * @param {string} marketContractOraclizeAddress   Address of the contract
+   * @returns {Promise<boolean>}                     Is this contract settled?
+   */
+  public async isContractSettledAsync(marketContractOraclizeAddress: string): Promise<boolean> {
+    const marketContractOraclize: MarketContractOraclize = await this._getMarketContractAsync(
+      marketContractOraclizeAddress
+    );
+    return marketContractOraclize.isSettled;
+  }
+
   // endregion //Public Methods
 
   // region Protected Methods
