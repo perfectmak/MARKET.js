@@ -399,13 +399,15 @@ describe('Order', () => {
       takerFee: new BigNumber(0)
     };
 
-    const cancelQty = 3;
-    expect(
-      await market.cancelOrderAsync(order, new BigNumber(cancelQty), {
-        from: maker,
-        gas: 400000
-      })
-    ).toEqual(new BigNumber(cancelQty));
+    const expectedCancelQty = 3;
+
+    const orderInfo = await market.cancelOrderAsync(order, new BigNumber(expectedCancelQty), {
+      from: maker,
+      gas: 400000
+    });
+
+    const actualCancelQty = await orderInfo.cancelledQty;
+    expect(actualCancelQty).toEqual(new BigNumber(expectedCancelQty));
   });
 
   it('Returns error for dead orders', async () => {

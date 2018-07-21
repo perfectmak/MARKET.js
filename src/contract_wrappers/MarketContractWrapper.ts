@@ -51,13 +51,13 @@ export class MarketContractWrapper {
    * @param   order                          The order you wish to cancel.
    * @param   cancelQty                      The amount of the order that you wish to fill.
    * @param   txParams                       Transaction params of web3.
-   * @returns {Promise<BigNumber | number>}  The quantity cancelled.
+   * @returns {Promise<OrderInfo>}           The quantity cancelled.
    */
   public async cancelOrderAsync(
     order: Order,
     cancelQty: BigNumber,
     txParams: ITxParams = {}
-  ): Promise<BigNumber | number> {
+  ): Promise<OrderInfo> {
     const marketContract: MarketContract = await this._getMarketContractAsync(
       order.contractAddress
     );
@@ -71,22 +71,7 @@ export class MarketContractWrapper {
       .send(txParams);
 
     const blockNumber: number = Number(this._web3.eth.getTransaction(txHash).blockNumber);
-    return new Promise<BigNumber | number>((resolve, reject) => {
-      const stopEventWatcher = marketContract
-        .OrderCancelledEvent({ maker: order.maker })
-        .watch({ fromBlock: blockNumber, toBlock: blockNumber }, (err, eventLog) => {
-          if (err) {
-            console.log(err);
-          }
-          if (eventLog.transactionHash === txHash) {
-            stopEventWatcher()
-              .then(function() {
-                return resolve(eventLog.args.cancelledQty);
-              })
-              .catch(reject);
-          }
-        });
-    });
+    return OrderInfo.create(marketContract, order, { txHash, blockNumber });
   }
 
   /**

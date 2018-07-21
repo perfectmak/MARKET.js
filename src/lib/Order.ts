@@ -265,6 +265,29 @@ export class OrderInfo {
     })();
   }
 
+  /**
+   * Fetches cancelled quantity for this order
+   *
+   */
+  get cancelledQty(): Promise<BigNumber | number> {
+    return (async () => {
+      let stopEventWatcher = async () => {
+        return;
+      }; // pre-initialized to prevent NPE checks :)
+
+      try {
+        const cancelledQty = await Promise.race([
+          this._fetchOrWatchForCancelledQty(stopEventWatcher),
+          this._watchForError()
+        ]);
+        return cancelledQty;
+      } catch (err) {
+        await stopEventWatcher(); // cleanup, prevent further watching
+        return Promise.reject(err);
+      }
+    })();
+  }
+
   // endregion // Public Methods
   // region Private Methods
   // *****************************************************************
@@ -273,7 +296,7 @@ export class OrderInfo {
 
   /**
    * Tries to fetch filledQty for this Order.
-   * If nothing founds, watches for when it is found.
+   * If nothing found, watches for when it is found.
    *
    * @param {() => Promise<void>} stopWatcher stop watching for filled Qty
    */
@@ -300,6 +323,44 @@ export class OrderInfo {
           stopWatcher()
             .then(function() {
               return resolve(eventLog.args.filledQty);
+            })
+            .catch(reject);
+        }
+      });
+    });
+  }
+
+  /**
+   * Tries to fetch cancelled for this Order.
+   * If nothing found, watches for when it is found.
+   *
+   * @param {() => Promise<void>} stopWatcher stop watching for cancelled Qty
+   */
+  private _fetchOrWatchForCancelledQty(
+    stopWatcher: () => Promise<void>
+  ): Promise<BigNumber | number> {
+    return new Promise<BigNumber | number>(async (resolve, reject) => {
+      const watchFilter = { fromBlock: this._fromBlockNumber, toBlock: this._toBlockNumber };
+      const orderEvent = this._marketContract.OrderCancelledEvent({ maker: this._order.maker });
+
+      // try fetching event
+      const eventLogs = await orderEvent.get(watchFilter);
+      let foundEvent = eventLogs.find(eventLog => eventLog.transactionHash === this.txHash);
+      if (foundEvent) {
+        resolve(foundEvent.args.cancelledQty);
+        return;
+      }
+
+      // watch for event
+      stopWatcher = orderEvent.watch(watchFilter, (err, eventLog) => {
+        if (err) {
+          console.log(err);
+        }
+
+        if (eventLog.transactionHash === this.txHash) {
+          stopWatcher()
+            .then(function() {
+              return resolve(eventLog.args.cancelledQty);
             })
             .catch(reject);
         }

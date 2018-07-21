@@ -13,18 +13,11 @@ describe('OrderInfo', () => {
   let stubOrder: Order;
   let orderFilledGetResult;
   let orderFilledWatchResult;
+  let orderCancelledGetResult;
+  let orderCancelledWatchResult;
   let errorEventResult;
 
-  beforeEach(() => {
-    mockContract = createStubInstance(MarketContract);
-    stubOrder = {
-      maker: ''
-    } as Order;
-    orderFilledGetResult = Promise.resolve([]);
-    orderFilledWatchResult = {};
-    errorEventResult = null;
-
-    // setup contract mocks
+  function stubMarketContractEvents() {
     mockContract.ErrorEvent = stub().returns({
       watch(_: IWatchFilter, cb: (err: Error, event: {}) => void): () => Promise<void> {
         setTimeout(() => {
@@ -52,6 +45,37 @@ describe('OrderInfo', () => {
         return () => Promise.resolve();
       }
     });
+
+    mockContract.OrderCancelledEvent = stub().returns({
+      get() {
+        return orderCancelledGetResult;
+      },
+
+      watch(_: IWatchFilter, cb: (err: Error, event: {}) => void): () => Promise<void> {
+        setTimeout(() => {
+          if (orderCancelledWatchResult) {
+            cb(null, orderCancelledWatchResult);
+          }
+        }, 100);
+
+        return () => Promise.resolve();
+      }
+    });
+  }
+
+  beforeEach(() => {
+    mockContract = createStubInstance(MarketContract);
+    stubOrder = {
+      maker: ''
+    } as Order;
+    orderFilledGetResult = Promise.resolve([]);
+    orderFilledWatchResult = {};
+    orderCancelledGetResult = Promise.resolve([]);
+    orderCancelledWatchResult = {};
+    errorEventResult = null;
+
+    // setup contract mocks
+    stubMarketContractEvents();
   });
 
   describe('get filledQty', () => {
@@ -92,6 +116,48 @@ describe('OrderInfo', () => {
         const orderInfo = OrderInfo.create(mockContract, stubOrder, { txHash });
 
         await expect(orderInfo.filledQty).rejects.toThrow(expectedError);
+      }
+    );
+  });
+
+  describe('get cancelledQty', () => {
+    it('should watch for event if not already broadcasted', async () => {
+      const txHash = '0x0000000';
+      const expectedCancelledQty = new BigNumber(2);
+      orderCancelledWatchResult = {
+        transactionHash: txHash,
+        args: {
+          cancelledQty: expectedCancelledQty
+        }
+      };
+
+      const orderInfo = OrderInfo.create(mockContract, stubOrder, { txHash });
+      const actualCancelledQty = await orderInfo.cancelledQty;
+
+      expect(actualCancelledQty.toString()).toEqual(expectedCancelledQty.toString());
+    });
+
+    // test error events
+    it.each`
+      errorCode                       | expectedError
+      ${OrderInfo.ORDER_EXPIRED_CODE} | ${MarketError.OrderExpired}
+      ${OrderInfo.ORDER_DEAD_CODE}    | ${MarketError.OrderDead}
+      ${100}                          | ${MarketError.UnknownOrderError}
+    `(
+      'should throw $expectedError for a $errorCode ErrorEvent',
+      async ({ errorCode, expectedError }) => {
+        const txHash = '0x0000000';
+        orderFilledWatchResult = null;
+        errorEventResult = {
+          transactionHash: txHash,
+          args: {
+            errorCode: parseInt(errorCode, 10)
+          }
+        };
+
+        const orderInfo = OrderInfo.create(mockContract, stubOrder, { txHash });
+
+        await expect(orderInfo.cancelledQty).rejects.toThrow(expectedError);
       }
     );
   });

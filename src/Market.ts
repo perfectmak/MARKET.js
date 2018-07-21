@@ -467,7 +467,7 @@ export class Market {
     order: Order,
     cancelQty: BigNumber,
     txParams: ITxParams = {}
-  ): Promise<BigNumber | number> {
+  ): Promise<OrderInfo> {
     return this.marketContractWrapper.cancelOrderAsync(order, cancelQty, txParams);
   }
 
