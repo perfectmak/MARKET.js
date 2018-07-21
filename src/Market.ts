@@ -36,6 +36,7 @@ import {
   createOrderHashAsync,
   createSignedOrderAsync,
   isValidSignatureAsync,
+  OrderInfo,
   signOrderHashAsync
 } from './lib/Order';
 import { MARKETProtocolArtifacts } from './MARKETProtocolArtifacts';
@@ -423,13 +424,13 @@ export class Market {
    *                                         signedOrder you wish to validate.
    * @param {BigNumber} fillQty              The amount of the order that you wish to fill.
    * @param {ITxParams} txParams             Transaction params of web3.
-   * @return {Promise<BigNumber | number>}   Qty that was able to be filled.
+   * @return {Promise<string>}               Transaction Hash of the trade
    */
   public async tradeOrderAsync(
     signedOrder: SignedOrder,
     fillQty: BigNumber,
     txParams: ITxParams = {}
-  ): Promise<BigNumber | number> {
+  ): Promise<OrderInfo> {
     return this.marketContractWrapper.tradeOrderAsync(
       this.mktTokenContract,
       this.orderLib.address,
