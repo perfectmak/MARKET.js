@@ -73,7 +73,7 @@ export class MarketContractWrapper {
       .send(txParams);
 
     const blockNumber: number = Number(this._web3.eth.getTransaction(txHash).blockNumber);
-    return OrderTransactionInfo.create(marketContract, order, { txHash, blockNumber });
+    return new OrderTransactionInfo(marketContract, order, txHash, blockNumber);
   }
 
   /**
@@ -257,7 +257,7 @@ export class MarketContractWrapper {
     const blockNumber: number = Number(this._web3.eth.getTransaction(txHash).blockNumber);
 
     return Promise.resolve(
-      OrderTransactionInfo.create(marketContract, signedOrder, { txHash, blockNumber })
+      new OrderTransactionInfo(marketContract, signedOrder, txHash, blockNumber)
     );
   }
 

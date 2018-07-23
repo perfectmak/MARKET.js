@@ -4,15 +4,6 @@ import { MarketContract, Order } from '@marketprotocol/types';
 import { MarketError } from '../types';
 
 /***
- * Parameters to initialize OrderTransactionInfo
- *
- */
-export interface OrderTransactionInfoParams {
-  txHash: string;
-  blockNumber?: number;
-}
-
-/***
  * OrderTransactionInfo fetches and hold all the necessary information about
  * a transaction and its order that has been posted through a market contract.
  *
@@ -38,38 +29,27 @@ export class OrderTransactionInfo {
   // *****************************************************************
   // ****                     Constructors                        ****
   // *****************************************************************
-
-  private constructor(marketContract: MarketContract, order: Order, txHash: string) {
+  /***
+   * Creates a OrderTransactionInfo object with the specified params
+   * @param {MarketContract} marketContract   MarketContract for order
+   * @param {Order} order                     Order with info to be tracked
+   * @param {string} txHash                   hash of transaction in question
+   * @param {number} blockNumber              block number to filter events from
+   */
+  public constructor(
+    marketContract: MarketContract,
+    order: Order,
+    txHash: string,
+    blockNumber?: number
+  ) {
     this._marketContract = marketContract;
     this._order = order;
     this.txHash = txHash;
+    this._fromBlockNumber = blockNumber ? blockNumber : 0;
+    this._toBlockNumber = blockNumber;
   }
 
   // endregion // Constructors
-  // region Properties
-  // *****************************************************************
-  // ****                     Properties                          ****
-  // *****************************************************************
-
-  /***
-   * Factory function to create all relevant order information
-   * @param {MarketContract} marketContract         MarketContract for order
-   * @param {Order} order                           Order with info to be tracked
-   * @param {OrderTransactionInfoParams} txParams   transaction parameters
-   * @returns {OrderTransactionInfo}
-   */
-  static create(
-    marketContract: MarketContract,
-    order: Order,
-    txParams: OrderTransactionInfoParams
-  ): OrderTransactionInfo {
-    const orderTxInfo = new OrderTransactionInfo(marketContract, order, txParams.txHash);
-    orderTxInfo._fromBlockNumber = txParams.blockNumber ? txParams.blockNumber : 0;
-    orderTxInfo._toBlockNumber = txParams.blockNumber;
-    return orderTxInfo;
-  }
-
-  // endregion //Properties
 
   // region Public Methods
   // *****************************************************************

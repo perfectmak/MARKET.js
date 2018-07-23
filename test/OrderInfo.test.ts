@@ -89,7 +89,7 @@ describe('OrderTransactionInfo', () => {
         }
       };
 
-      const orderTxInfo = OrderTransactionInfo.create(mockContract, stubOrder, { txHash });
+      const orderTxInfo = new OrderTransactionInfo(mockContract, stubOrder, txHash);
       const actualFilledQty = await orderTxInfo.filledQtyAsync;
 
       expect(actualFilledQty.toString()).toEqual(expectedFilledQty.toString());
@@ -113,7 +113,7 @@ describe('OrderTransactionInfo', () => {
           }
         };
 
-        const orderTxInfo = OrderTransactionInfo.create(mockContract, stubOrder, { txHash });
+        const orderTxInfo = new OrderTransactionInfo(mockContract, stubOrder, txHash);
 
         await expect(orderTxInfo.filledQtyAsync).rejects.toThrow(expectedError);
       }
@@ -131,7 +131,7 @@ describe('OrderTransactionInfo', () => {
         }
       };
 
-      const orderTxInfo = OrderTransactionInfo.create(mockContract, stubOrder, { txHash });
+      const orderTxInfo = new OrderTransactionInfo(mockContract, stubOrder, txHash);
       const actualCancelledQty = await orderTxInfo.cancelledQtyAsync;
 
       expect(actualCancelledQty.toString()).toEqual(expectedCancelledQty.toString());
@@ -155,7 +155,7 @@ describe('OrderTransactionInfo', () => {
           }
         };
 
-        const orderTxInfo = OrderTransactionInfo.create(mockContract, stubOrder, { txHash });
+        const orderTxInfo = new OrderTransactionInfo(mockContract, stubOrder, txHash);
 
         await expect(orderTxInfo.cancelledQtyAsync).rejects.toThrow(expectedError);
       }
