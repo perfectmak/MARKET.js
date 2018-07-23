@@ -3,7 +3,7 @@ import BigNumber from 'bignumber.js';
 import { MarketContract, Order } from '@marketprotocol/types';
 import { MarketError } from '../types';
 
-/**
+/***
  * Parameters to initialize OrderTransactionInfo
  *
  */
@@ -12,7 +12,7 @@ export interface OrderTransactionInfoParams {
   blockNumber?: number;
 }
 
-/**
+/***
  * OrderTransactionInfo fetches and hold all the necessary information about
  * a transaction and its order that has been posted through a market contract.
  *
@@ -51,12 +51,12 @@ export class OrderTransactionInfo {
   // ****                     Properties                          ****
   // *****************************************************************
 
-  /**
+  /***
    * Factory function to create all relevant order information
-   *
-   * @param {MarketContract} marketContract MarketContract for order
-   * @param {Order} order Order with info to be tracked
-   * @param {OrderTransactionInfoParams} txParams transaction parameters
+   * @param {MarketContract} marketContract         MarketContract for order
+   * @param {Order} order                           Order with info to be tracked
+   * @param {OrderTransactionInfoParams} txParams   transaction parameters
+   * @returns {OrderTransactionInfo}
    */
   static create(
     marketContract: MarketContract,
@@ -76,10 +76,9 @@ export class OrderTransactionInfo {
   // ****                     Public Methods                      ****
   // *****************************************************************
 
-  /**
+  /***
    * Fetches filled quantity for this order.
-   *
-   *
+   * @returns {Promise<BigNumber>}
    */
   get filledQtyAsync(): Promise<BigNumber> {
     return (async () => {
@@ -100,9 +99,9 @@ export class OrderTransactionInfo {
     })();
   }
 
-  /**
+  /***
    * Fetches cancelled quantity for this order
-   *
+   * @returns {Promise<BigNumber>}
    */
   get cancelledQtyAsync(): Promise<BigNumber> {
     return (async () => {
@@ -129,11 +128,13 @@ export class OrderTransactionInfo {
   // ****                     Private Methods                     ****
   // *****************************************************************
 
-  /**
+  /***
    * Tries to fetch filledQty for this Order.
    * If nothing found, watches for when it is found.
    *
    * @param {() => Promise<void>} stopWatcher stop watching for filled Qty
+   * @returns {Promise<BigNumber>}
+   * @private
    */
   private _fetchOrWatchForFilledQty(stopWatcher: () => Promise<void>): Promise<BigNumber> {
     return new Promise<BigNumber>(async (resolve, reject) => {
@@ -165,15 +166,16 @@ export class OrderTransactionInfo {
     });
   }
 
-  /**
-   * Tries to fetch cancelled for this Order.
-   * If nothing found, watches for when it is found.
-   *
+  /***
+   * Tries to fetch cancelled for this Order. If nothing found, watches for when it is found.
    * @param {() => Promise<void>} stopWatcher stop watching for cancelled Qty
+   * @returns {Promise<BigNumber>}
+   * @private
    */
   private _fetchOrWatchForCancelledQty(stopWatcher: () => Promise<void>): Promise<BigNumber> {
     return new Promise<BigNumber>(async (resolve, reject) => {
       const watchFilter = { fromBlock: this._fromBlockNumber, toBlock: this._toBlockNumber };
+      // TODO: we can further filter the below event by orderHash!
       const orderEvent = this._marketContract.OrderCancelledEvent({ maker: this._order.maker });
 
       // try fetching event
@@ -201,6 +203,11 @@ export class OrderTransactionInfo {
     });
   }
 
+  /***
+   * Error event watcher
+   * @returns {Promise<BigNumber>}
+   * @private
+   */
   private _watchForError(): Promise<BigNumber> {
     return new Promise((_, reject) => {
       const errorEvent = this._marketContract.ErrorEvent({});
