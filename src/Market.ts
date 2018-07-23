@@ -231,16 +231,16 @@ export class Market {
   /**
    * Gets the history of deposits and withdrawals for a given collateral pool address.
    * @param {string} collateralPoolContractAddress    address of the MarketCollateralPool
-   * @param {string | number} fromBlock                        from block #
-   * @param {string | number} toBlock                        to block #
+   * @param {string | number} fromBlock               from block #
+   * @param {string | number} toBlock                 to block #
    * @param {string} userAddress                      only search for deposits/withdrawals to/from a specified address
-   * @returns {Promise<CollateralEvent[]>} 
+   * @returns {Promise<CollateralEvent[]>}
    */
   public async getCollateralEventsAsync(
     collateralPoolContractAddress: string,
-    fromBlock: number|string = '0x0',
-    toBlock: number|string = 'latest',
-    userAddress: string|null = null
+    fromBlock: number | string = '0x0',
+    toBlock: number | string = 'latest',
+    userAddress: string | null = null
   ): Promise<CollateralEvent[]> {
     return getCollateralEventsAsync(
       this._web3.currentProvider,
@@ -310,7 +310,7 @@ export class Market {
    * marketContractAddress.
    * @param {string} marketContractAddress
    * @param {ITxParams} txParams
-   * @returns {Promise<string>}                   Transaction ofsuccessful deployment.
+   * @returns {Promise<string>}                   Transaction of successful deployment.
    */
   public async deployMarketCollateralPoolAsync(
     marketContractAddress: string,
