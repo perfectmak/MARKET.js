@@ -81,7 +81,7 @@ export class OrderTransactionInfo {
    *
    *
    */
-  get filledQty(): Promise<BigNumber | number> {
+  get filledQtyAsync(): Promise<BigNumber> {
     return (async () => {
       let stopEventWatcher = async () => {
         return;
@@ -104,7 +104,7 @@ export class OrderTransactionInfo {
    * Fetches cancelled quantity for this order
    *
    */
-  get cancelledQty(): Promise<BigNumber | number> {
+  get cancelledQtyAsync(): Promise<BigNumber> {
     return (async () => {
       let stopEventWatcher = async () => {
         return;
@@ -135,8 +135,8 @@ export class OrderTransactionInfo {
    *
    * @param {() => Promise<void>} stopWatcher stop watching for filled Qty
    */
-  private _fetchOrWatchForFilledQty(stopWatcher: () => Promise<void>): Promise<BigNumber | number> {
-    return new Promise<BigNumber | number>(async (resolve, reject) => {
+  private _fetchOrWatchForFilledQty(stopWatcher: () => Promise<void>): Promise<BigNumber> {
+    return new Promise<BigNumber>(async (resolve, reject) => {
       const watchFilter = { fromBlock: this._fromBlockNumber, toBlock: this._toBlockNumber };
       const orderEvent = this._marketContract.OrderFilledEvent({ maker: this._order.maker });
 
@@ -144,7 +144,7 @@ export class OrderTransactionInfo {
       const eventLogs = await orderEvent.get(watchFilter);
       let foundEvent = eventLogs.find(eventLog => eventLog.transactionHash === this.txHash);
       if (foundEvent) {
-        resolve(foundEvent.args.filledQty);
+        resolve(new BigNumber(foundEvent.args.filledQty));
         return;
       }
 
@@ -157,7 +157,7 @@ export class OrderTransactionInfo {
         if (eventLog.transactionHash === this.txHash) {
           stopWatcher()
             .then(function() {
-              return resolve(eventLog.args.filledQty);
+              return resolve(new BigNumber(eventLog.args.filledQty));
             })
             .catch(reject);
         }
@@ -171,10 +171,8 @@ export class OrderTransactionInfo {
    *
    * @param {() => Promise<void>} stopWatcher stop watching for cancelled Qty
    */
-  private _fetchOrWatchForCancelledQty(
-    stopWatcher: () => Promise<void>
-  ): Promise<BigNumber | number> {
-    return new Promise<BigNumber | number>(async (resolve, reject) => {
+  private _fetchOrWatchForCancelledQty(stopWatcher: () => Promise<void>): Promise<BigNumber> {
+    return new Promise<BigNumber>(async (resolve, reject) => {
       const watchFilter = { fromBlock: this._fromBlockNumber, toBlock: this._toBlockNumber };
       const orderEvent = this._marketContract.OrderCancelledEvent({ maker: this._order.maker });
 
@@ -182,7 +180,7 @@ export class OrderTransactionInfo {
       const eventLogs = await orderEvent.get(watchFilter);
       let foundEvent = eventLogs.find(eventLog => eventLog.transactionHash === this.txHash);
       if (foundEvent) {
-        resolve(foundEvent.args.cancelledQty);
+        resolve(new BigNumber(foundEvent.args.cancelledQty));
         return;
       }
 
@@ -195,7 +193,7 @@ export class OrderTransactionInfo {
         if (eventLog.transactionHash === this.txHash) {
           stopWatcher()
             .then(function() {
-              return resolve(eventLog.args.cancelledQty);
+              return resolve(new BigNumber(eventLog.args.cancelledQty));
             })
             .catch(reject);
         }
@@ -203,7 +201,7 @@ export class OrderTransactionInfo {
     });
   }
 
-  private _watchForError(): Promise<BigNumber | number> {
+  private _watchForError(): Promise<BigNumber> {
     return new Promise((_, reject) => {
       const errorEvent = this._marketContract.ErrorEvent({});
 

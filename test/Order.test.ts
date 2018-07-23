@@ -359,7 +359,7 @@ describe('Order', () => {
       gas: 400000
     });
 
-    expect(await orderTxInfo.filledQty).toEqual(new BigNumber(2));
+    expect(await orderTxInfo.filledQtyAsync).toEqual(new BigNumber(2));
   });
 
   it('Cancels an order in a given quantity', async () => {
@@ -406,7 +406,7 @@ describe('Order', () => {
       gas: 400000
     });
 
-    const actualCancelQty = await orderTxInfo.cancelledQty;
+    const actualCancelQty = await orderTxInfo.cancelledQtyAsync;
     expect(actualCancelQty).toEqual(new BigNumber(expectedCancelQty));
   });
 
@@ -476,7 +476,7 @@ describe('Order', () => {
       gas: 400000
     });
 
-    await expect(orderTxInfo.filledQty).rejects.toThrow(new Error(MarketError.OrderDead));
+    await expect(orderTxInfo.filledQtyAsync).rejects.toThrow(new Error(MarketError.OrderDead));
   });
 
   it('Gets qty filled or cancelled from order', async () => {
