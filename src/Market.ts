@@ -40,6 +40,7 @@ import {
   isValidSignatureAsync,
   signOrderHashAsync
 } from './lib/Order';
+import { OrderTransactionInfo } from './lib/OrderTransactionInfo';
 import { MARKETProtocolArtifacts } from './MARKETProtocolArtifacts';
 
 /**
@@ -448,17 +449,19 @@ export class Market {
 
   /**
    * Trades an order and returns success or error.
+   * The returned OrderTransactionInfo can be used to get the actual filled quantity
+   *
    * @param {SignedOrder} signedOrder        An object that conforms to the SignedOrder interface. The
    *                                         signedOrder you wish to validate.
    * @param {BigNumber} fillQty              The amount of the order that you wish to fill.
    * @param {ITxParams} txParams             Transaction params of web3.
-   * @return {Promise<BigNumber | number>}   Qty that was able to be filled.
+   * @return {Promise<OrderTransactionInfo>} The information about this order transaction
    */
   public async tradeOrderAsync(
     signedOrder: SignedOrder,
     fillQty: BigNumber,
     txParams: ITxParams = {}
-  ): Promise<BigNumber | number> {
+  ): Promise<OrderTransactionInfo> {
     return this.marketContractWrapper.tradeOrderAsync(
       this.mktTokenContract,
       this.orderLib.address,
@@ -485,17 +488,19 @@ export class Market {
   }
 
   /**
-   * Cancels an order in the given quantity and returns the quantity.
-   * @param {Order} order                   Order object.
-   * @param {BigNumber} cancelQty           The amount of the order that you wish to cancel.
-   * @param {ITxParams} txParams            Transaction params of web3.
-   * @return {Promise<BigNumber>}           Qty that cancelled.
+   * Cancels an order in the given quantity.
+   * The returned OrderTransactionInfo can be used to get the actual cancelled quantity
+   *
+   * @param {Order} order                     Order object.
+   * @param {BigNumber} cancelQty             The amount of the order that you wish to cancel.
+   * @param {ITxParams} txParams              Transaction params of web3.
+   * @return {Promise<OrderTransactionInfo>}  The information about this Order Transaction.
    */
   public async cancelOrderAsync(
     order: Order,
     cancelQty: BigNumber,
     txParams: ITxParams = {}
-  ): Promise<BigNumber | number> {
+  ): Promise<OrderTransactionInfo> {
     return this.marketContractWrapper.cancelOrderAsync(order, cancelQty, txParams);
   }
 
