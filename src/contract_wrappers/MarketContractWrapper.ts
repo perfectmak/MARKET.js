@@ -9,7 +9,8 @@ import { ERC20TokenContractWrapper } from './ERC20TokenContractWrapper';
 import { getUserAccountBalanceAsync } from '../lib/Collateral';
 import { Utils } from '../lib/Utils';
 import { constants } from '../constants';
-import { createOrderHashAsync, isValidSignatureAsync, OrderInfo } from '../lib/Order';
+import { createOrderHashAsync, isValidSignatureAsync } from '../lib/Order';
+import { OrderTransactionInfo } from '../lib/OrderTransactionInfo';
 import { assert } from '../assert';
 
 /**
@@ -48,16 +49,17 @@ export class MarketContractWrapper {
   // *****************************************************************
   /**
    * Cancels an order in the given quantity.
-   * @param   order                          The order you wish to cancel.
-   * @param   cancelQty                      The amount of the order that you wish to fill.
-   * @param   txParams                       Transaction params of web3.
-   * @returns {Promise<OrderInfo>}           The quantity cancelled.
+   *
+   * @param   order                           The order you wish to cancel.
+   * @param   cancelQty                       The amount of the order that you wish to fill.
+   * @param   txParams                        Transaction params of web3.
+   * @returns {Promise<OrderTransactionInfo>} Information about this order transaction.
    */
   public async cancelOrderAsync(
     order: Order,
     cancelQty: BigNumber,
     txParams: ITxParams = {}
-  ): Promise<OrderInfo> {
+  ): Promise<OrderTransactionInfo> {
     const marketContract: MarketContract = await this._getMarketContractAsync(
       order.contractAddress
     );
@@ -71,7 +73,7 @@ export class MarketContractWrapper {
       .send(txParams);
 
     const blockNumber: number = Number(this._web3.eth.getTransaction(txHash).blockNumber);
-    return OrderInfo.create(marketContract, order, { txHash, blockNumber });
+    return OrderTransactionInfo.create(marketContract, order, { txHash, blockNumber });
   }
 
   /**
@@ -82,7 +84,7 @@ export class MarketContractWrapper {
    *                                          signedOrder you wish to validate.
    * @param   fillQty                         The amount of the order that you wish to fill.
    * @param   txParams                        Transaction params of web3.
-   * @returns {Promise<OrderInfo>}            Transaction has of transaction
+   * @returns {Promise<OrderTransactionInfo>} Information about this order transaction.
    */
   public async tradeOrderAsync(
     mktTokenContract: MarketToken,
@@ -90,7 +92,7 @@ export class MarketContractWrapper {
     signedOrder: SignedOrder,
     fillQty: BigNumber,
     txParams: ITxParams = {}
-  ): Promise<OrderInfo> {
+  ): Promise<OrderTransactionInfo> {
     assert.isETHAddressHex('orderLibAddress', orderLibAddress);
     // assert.isSchemaValid('SignedOrder', signedOrder, schemas.SignedOrderSchema);
 
@@ -254,7 +256,9 @@ export class MarketContractWrapper {
 
     const blockNumber: number = Number(this._web3.eth.getTransaction(txHash).blockNumber);
 
-    return Promise.resolve(OrderInfo.create(marketContract, signedOrder, { txHash, blockNumber }));
+    return Promise.resolve(
+      OrderTransactionInfo.create(marketContract, signedOrder, { txHash, blockNumber })
+    );
   }
 
   /**

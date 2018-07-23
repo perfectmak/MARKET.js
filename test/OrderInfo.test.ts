@@ -1,14 +1,14 @@
 import { createStubInstance, stub } from 'sinon';
-import { DecodedLogEntry, IWatchFilter, MarketContract, Order } from '@marketprotocol/types';
+import { IWatchFilter, MarketContract, Order } from '@marketprotocol/types';
 import BigNumber from 'bignumber.js';
 
-import { OrderInfo } from '../src/lib/Order';
+import { OrderTransactionInfo } from '../src/lib/OrderTransactionInfo';
 import { MarketError } from '../src/types';
 
 /**
- * OrderInfo
+ * Test OrderTransactionInfo
  */
-describe('OrderInfo', () => {
+describe('OrderTransactionInfo', () => {
   let mockContract: MarketContract;
   let stubOrder: Order;
   let orderFilledGetResult;
@@ -89,18 +89,18 @@ describe('OrderInfo', () => {
         }
       };
 
-      const orderInfo = OrderInfo.create(mockContract, stubOrder, { txHash });
-      const actualFilledQty = await orderInfo.filledQty;
+      const orderTxInfo = OrderTransactionInfo.create(mockContract, stubOrder, { txHash });
+      const actualFilledQty = await orderTxInfo.filledQty;
 
       expect(actualFilledQty.toString()).toEqual(expectedFilledQty.toString());
     });
 
     // test error events
     it.each`
-      errorCode                       | expectedError
-      ${OrderInfo.ORDER_EXPIRED_CODE} | ${MarketError.OrderExpired}
-      ${OrderInfo.ORDER_DEAD_CODE}    | ${MarketError.OrderDead}
-      ${100}                          | ${MarketError.UnknownOrderError}
+      errorCode                                  | expectedError
+      ${OrderTransactionInfo.ORDER_EXPIRED_CODE} | ${MarketError.OrderExpired}
+      ${OrderTransactionInfo.ORDER_DEAD_CODE}    | ${MarketError.OrderDead}
+      ${100}                                     | ${MarketError.UnknownOrderError}
     `(
       'should throw $expectedError for a $errorCode ErrorEvent',
       async ({ errorCode, expectedError }) => {
@@ -113,9 +113,9 @@ describe('OrderInfo', () => {
           }
         };
 
-        const orderInfo = OrderInfo.create(mockContract, stubOrder, { txHash });
+        const orderTxInfo = OrderTransactionInfo.create(mockContract, stubOrder, { txHash });
 
-        await expect(orderInfo.filledQty).rejects.toThrow(expectedError);
+        await expect(orderTxInfo.filledQty).rejects.toThrow(expectedError);
       }
     );
   });
@@ -131,18 +131,18 @@ describe('OrderInfo', () => {
         }
       };
 
-      const orderInfo = OrderInfo.create(mockContract, stubOrder, { txHash });
-      const actualCancelledQty = await orderInfo.cancelledQty;
+      const orderTxInfo = OrderTransactionInfo.create(mockContract, stubOrder, { txHash });
+      const actualCancelledQty = await orderTxInfo.cancelledQty;
 
       expect(actualCancelledQty.toString()).toEqual(expectedCancelledQty.toString());
     });
 
     // test error events
     it.each`
-      errorCode                       | expectedError
-      ${OrderInfo.ORDER_EXPIRED_CODE} | ${MarketError.OrderExpired}
-      ${OrderInfo.ORDER_DEAD_CODE}    | ${MarketError.OrderDead}
-      ${100}                          | ${MarketError.UnknownOrderError}
+      errorCode                                  | expectedError
+      ${OrderTransactionInfo.ORDER_EXPIRED_CODE} | ${MarketError.OrderExpired}
+      ${OrderTransactionInfo.ORDER_DEAD_CODE}    | ${MarketError.OrderDead}
+      ${100}                                     | ${MarketError.UnknownOrderError}
     `(
       'should throw $expectedError for a $errorCode ErrorEvent',
       async ({ errorCode, expectedError }) => {
@@ -155,9 +155,9 @@ describe('OrderInfo', () => {
           }
         };
 
-        const orderInfo = OrderInfo.create(mockContract, stubOrder, { txHash });
+        const orderTxInfo = OrderTransactionInfo.create(mockContract, stubOrder, { txHash });
 
-        await expect(orderInfo.cancelledQty).rejects.toThrow(expectedError);
+        await expect(orderTxInfo.cancelledQty).rejects.toThrow(expectedError);
       }
     );
   });
