@@ -359,12 +359,12 @@ describe('Order', () => {
       )
     ).toBe(true);
 
-    expect(
-      await market.tradeOrderAsync(signedOrder, new BigNumber(2), {
-        from: taker,
-        gas: 400000
-      })
-    ).toEqual(new BigNumber(2));
+    const orderTxInfo = await market.tradeOrderAsync(signedOrder, new BigNumber(2), {
+      from: taker,
+      gas: 400000
+    });
+
+    expect(await orderTxInfo.filledQtyAsync).toEqual(new BigNumber(2));
   });
 
   it('Cancels an order in a given quantity', async () => {
@@ -407,13 +407,15 @@ describe('Order', () => {
       takerFee: new BigNumber(0)
     };
 
-    const cancelQty = 3;
-    expect(
-      await market.cancelOrderAsync(order, new BigNumber(cancelQty), {
-        from: maker,
-        gas: 400000
-      })
-    ).toEqual(new BigNumber(cancelQty));
+    const expectedCancelQty = 3;
+
+    const orderTxInfo = await market.cancelOrderAsync(order, new BigNumber(expectedCancelQty), {
+      from: maker,
+      gas: 400000
+    });
+
+    const actualCancelQty = await orderTxInfo.cancelledQtyAsync;
+    expect(actualCancelQty).toEqual(new BigNumber(expectedCancelQty));
   });
 
   it('Returns error for dead orders', async () => {
@@ -487,12 +489,12 @@ describe('Order', () => {
     });
 
     // try filling empty orders show error out
-    await expect(
-      market.tradeOrderAsync(signedOrder, new BigNumber(2), {
-        from: taker,
-        gas: 400000
-      })
-    ).rejects.toThrow(new Error(MarketError.OrderDead));
+    const orderTxInfo = await market.tradeOrderAsync(signedOrder, new BigNumber(2), {
+      from: taker,
+      gas: 400000
+    });
+
+    await expect(orderTxInfo.filledQtyAsync).rejects.toThrow(new Error(MarketError.OrderDead));
   });
 
   it('Gets qty filled or cancelled from order', async () => {
