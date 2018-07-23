@@ -21,7 +21,9 @@ import { ERC20TokenContractWrapper } from './contract_wrappers/ERC20TokenContrac
 import { MarketContractOraclizeWrapper } from './contract_wrappers/MarketContractOraclizeWrapper';
 
 import {
+  CollateralEvent,
   depositCollateralAsync,
+  getCollateralEventsAsync,
   getUserAccountBalanceAsync,
   settleAndCloseAsync,
   withdrawCollateralAsync
@@ -222,6 +224,29 @@ export class Market {
       collateralPoolContractAddress,
       withdrawAmount,
       txParams
+    );
+  }
+
+  /**
+   * Gets the history of deposits and withdrawals for a given collateral pool address.
+   * @param {string} collateralPoolContractAddress    address of the MarketCollateralPool
+   * @param {string | number} fromBlock                        from block #
+   * @param {string | number} toBlock                        to block #
+   * @param {string} userAddress                      only search for deposits/withdrawals to/from a specified address
+   * @returns {Promise<CollateralEvent[]>} 
+   */
+  public async getCollateralEventsAsync(
+    collateralPoolContractAddress: string,
+    fromBlock: number|string = '0x0',
+    toBlock: number|string = 'latest',
+    userAddress: string|null = null
+  ): Promise<CollateralEvent[]> {
+    return getCollateralEventsAsync(
+      this._web3.currentProvider,
+      collateralPoolContractAddress,
+      fromBlock,
+      toBlock,
+      userAddress
     );
   }
 
