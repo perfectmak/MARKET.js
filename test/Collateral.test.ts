@@ -1,14 +1,18 @@
 import { BigNumber } from 'bignumber.js';
 import Web3 from 'web3';
-
 // Types
 import { ERC20, MarketContract, MathLib } from '@marketprotocol/types';
 
 import { Market } from '../src';
 import { constants } from '../src/constants';
 
-import { getUserAccountBalanceAsync, settleAndCloseAsync } from '../src/lib/Collateral';
+import { 
+  getCollateralEventsAsync, 
+  getUserAccountBalanceAsync, 
+  settleAndCloseAsync
+} from '../src/lib/Collateral';
 import { MarketError, MARKETProtocolConfig } from '../src/types';
+import { createEVMSnapshot, restoreEVMSnapshot } from './utils';
 
 /**
  * Collateral
@@ -247,5 +251,107 @@ describe('Collateral', () => {
         from: mockAccountAddress
       })
     ).rejects.toThrow(new Error(MarketError.InsufficientBalanceForTransfer));
+  });
+
+  describe('getCollateralEventsAsync', () => {
+    const depositAmount: BigNumber = new BigNumber(100);
+    let snapshotId;
+
+    beforeAll(async () => {
+      snapshotId = await createEVMSnapshot(web3);
+      await market.depositCollateralAsync(
+        collateralPoolAddress,
+        collateralTokenAddress,
+        depositAmount,
+        { from: maker }
+      );
+    });
+
+    afterAll(async () => {
+      await restoreEVMSnapshot(web3, snapshotId);
+    });
+
+    it('returns the deposit', async () => {
+      const events = await getCollateralEventsAsync(web3.currentProvider, collateralPoolAddress);
+      const includes: boolean = events.some((e): boolean => {
+        if (
+          depositAmount.isEqualTo(e.amount) &&
+          e.to === collateralPoolAddress &&
+          e.type === 'deposit' &&
+          e.from === maker
+        ) {
+          return true;
+        } 
+        return false;
+      });
+      expect(includes).toBe(true);
+    });
+
+    it('does not returns the deposit if not in the given block range', async () => {
+      const events = await getCollateralEventsAsync(web3.currentProvider, collateralPoolAddress, 0, 1);
+      const includes: boolean = events.some((e): boolean => {
+        if (
+          depositAmount.isEqualTo(e.amount) &&
+          e.to === collateralPoolAddress &&
+          e.type === 'deposit' &&
+          e.from === maker
+        ) {
+          return true;
+        } 
+        return false;
+      });
+      expect(includes).toBe(false);
+    });
+
+    it('returns the deposit matching userAddress', async () => {
+      const events = await getCollateralEventsAsync(web3.currentProvider, collateralPoolAddress, 0, 'latest', maker);
+      const includes: boolean = events.some((e): boolean => {
+        if (
+          depositAmount.isEqualTo(e.amount) &&
+          e.to === collateralPoolAddress &&
+          e.type === 'deposit' &&
+          e.from === maker
+        ) {
+          return true;
+        } 
+        return false;
+      });
+      expect(includes).toBe(true);
+    });
+
+    it('does not returns the deposit if it does not match userAddress', async () => {
+      const events = await getCollateralEventsAsync(web3.currentProvider, collateralPoolAddress, 0, 'latest', '0x0');
+      const includes: boolean = events.some((e): boolean => {
+        if (
+          depositAmount.isEqualTo(e.amount) &&
+          e.to === collateralPoolAddress &&
+          e.type === 'deposit' &&
+          e.from === maker
+        ) {
+          return true;
+        } 
+        return false;
+      });
+      expect(includes).toBe(false);
+    });
+    
+    it('returns a withdrawal', async () => {
+      await market.withdrawCollateralAsync(collateralPoolAddress, depositAmount, {
+        from: maker
+      });
+      const events = await getCollateralEventsAsync(web3.currentProvider, collateralPoolAddress);
+      const includes: boolean = events.some((e): boolean => {
+        if (
+          depositAmount.isEqualTo(e.amount) &&
+          e.to === maker &&
+          e.type === 'withdrawal' &&
+          e.from === collateralPoolAddress
+        ) {
+          return true;
+        } 
+        return false;
+      });
+      expect(includes).toBe(true);
+    });
   });
 });
