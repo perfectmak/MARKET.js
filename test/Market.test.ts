@@ -1,6 +1,6 @@
 import Web3 from 'web3';
 import { isUrl } from './utils';
-import { toBeArray, toBeString } from 'jest-extended';
+import { toBeArray, toBeBoolean, toBeString } from 'jest-extended';
 import { Market } from '../src/';
 import { constants } from '../src/constants';
 import { BigNumber } from 'bignumber.js';
@@ -55,11 +55,23 @@ describe('Market class', () => {
     isValidAddress(result);
   });
 
-  it('Returns a oracle query', async () => {
-    const result = await market.getOracleQuery(contractAddress);
+  it('Returns a oracle query URL', async () => {
+    const result = await market.getOracleQueryAsync(contractAddress);
     expect(result).toBeDefined();
     expect(result).toBeString();
     expect(isUrl(result.replace(/^.*\((.*)\)/, '$1'))).toBe(true);
+  });
+
+  it('Returns a contract expiration', async () => {
+    const result = await market.getContractExpirationAsync(contractAddress);
+    expect(result).toBeDefined();
+    expect(result.toNumber()).toBeNumber();
+  });
+
+  it('Returns a settlement status', async () => {
+    const result = await market.isContractSettledAsync(contractAddress);
+    expect(result).toBeDefined();
+    expect(result).toBeBoolean();
   });
 
   it('Returns a contract name', async () => {

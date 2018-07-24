@@ -299,8 +299,26 @@ export class Market {
    * @param marketContractAddress   MarketContract address
    * @returns {Promise<string>}     The oracle query
    */
-  public async getOracleQuery(marketContractAddress: string): Promise<string> {
-    return this.marketContractWrapper.getOracleQuery(marketContractAddress);
+  public async getOracleQueryAsync(marketContractAddress: string): Promise<string> {
+    return this.marketContractWrapper.getOracleQueryAsync(marketContractAddress);
+  }
+
+  /**
+   * Gets the contract expiration timestamp
+   * @param {string} marketContractAddress   MarketContract address
+   * @returns {Promise<BigNumber>}           Expiration timestamp
+   */
+  public async getContractExpirationAsync(marketContractAddress: string): Promise<BigNumber> {
+    return this.marketContractWrapper.getContractExpirationAsync(marketContractAddress);
+  }
+
+  /**
+   * Gets the settlement status of the contract
+   * @param {string} marketContractAddress    MarketContract address
+   * @returns {Promise<boolean>}              True/false
+   */
+  public async isContractSettledAsync(marketContractAddress: string): Promise<boolean> {
+    return this.marketContractWrapper.isContractSettledAsync(marketContractAddress);
   }
 
   // DEPLOYMENT METHODS
