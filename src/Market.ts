@@ -18,7 +18,7 @@ import { MARKETProtocolConfig } from './types';
 
 import { assert } from './assert';
 import { ERC20TokenContractWrapper } from './contract_wrappers/ERC20TokenContractWrapper';
-import { MarketContractOraclizeWrapper } from './contract_wrappers/MarketContractOraclizeWrapper';
+import { MarketProtocolOraclizeContractWrapper } from './contract_wrappers/MarketContractOraclizeWrapper';
 
 import {
   CollateralEvent,
@@ -60,7 +60,7 @@ export class Market {
   public orderLib: OrderLib;
 
   // wrappers
-  public marketContractWrapper: MarketContractOraclizeWrapper;
+  public marketContractWrapper: MarketProtocolOraclizeContractWrapper;
   public erc20TokenContractWrapper: ERC20TokenContractWrapper;
 
   // Config
@@ -124,7 +124,7 @@ export class Market {
     /* tslint:enable */
 
     this.erc20TokenContractWrapper = new ERC20TokenContractWrapper(this._web3);
-    this.marketContractWrapper = new MarketContractOraclizeWrapper(this._web3);
+    this.marketContractWrapper = new MarketProtocolOraclizeContractWrapper(this._web3);
   }
   // endregion//Constructors
 

@@ -43,7 +43,7 @@ export class ERC20TokenContractWrapper {
     assert.isETHAddressHex('tokenAddress', tokenAddress);
     const normalizedTokenAddress = tokenAddress.toLowerCase();
 
-    const tokenContract: ERC20 = await this._getERC20TokenContractAsync(normalizedTokenAddress);
+    const tokenContract: ERC20 = await this.getERC20TokenContractAsync(normalizedTokenAddress);
     return tokenContract.balanceOf(ownerAddress);
   }
 
@@ -68,7 +68,7 @@ export class ERC20TokenContractWrapper {
     await assert.isSenderAddressAsync('txParams.from', txParams.from || '', this._web3);
     assert.isValidBaseUnitAmount('amountInBaseUnits', amountInBaseUnits);
 
-    const tokenContract = await this._getERC20TokenContractAsync(tokenAddress);
+    const tokenContract = await this.getERC20TokenContractAsync(tokenAddress);
     return tokenContract.approveTx(spenderAddress, amountInBaseUnits).send(txParams);
   }
 
@@ -91,23 +91,16 @@ export class ERC20TokenContractWrapper {
     assert.isETHAddressHex('spenderAddress', spenderAddress);
     await assert.isSenderAddressAsync('ownerAddress', ownerAddress, this._web3);
 
-    const tokenContract = await this._getERC20TokenContractAsync(tokenAddress);
+    const tokenContract = await this.getERC20TokenContractAsync(tokenAddress);
     return tokenContract.allowance(ownerAddress, spenderAddress);
   }
 
-  // endregion //Public Methods
-
-  // region Private Methods
-  // *****************************************************************
-  // ****                     Private Methods                     ****
-  // *****************************************************************
   /**
    * Allow for retrieval or creation of a given ERC20 Token
    * @param {string} tokenAddress         address of ERC20
    * @returns {Promise<MarketContract>}   ERC20 object
-   * @private
    */
-  private async _getERC20TokenContractAsync(tokenAddress: string): Promise<ERC20> {
+  public async getERC20TokenContractAsync(tokenAddress: string): Promise<ERC20> {
     const normalizedTokenAddress = tokenAddress.toLowerCase();
     let tokenContract = this._tokenContractsByAddress[normalizedTokenAddress];
     if (!_.isUndefined(tokenContract)) {
@@ -118,5 +111,12 @@ export class ERC20TokenContractWrapper {
     this._tokenContractsByAddress[normalizedTokenAddress] = tokenContract;
     return tokenContract;
   }
+  // endregion //Public Methods
+
+  // region Private Methods
+  // *****************************************************************
+  // ****                     Private Methods                     ****
+  // *****************************************************************
+
   // endregion //Private Methods
 }

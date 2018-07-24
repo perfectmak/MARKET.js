@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import * as _ from 'lodash';
-import { MarketContractWrapper } from './contract_wrappers/MarketContractWrapper';
+import { MarketProtocolContractWrapper } from './contract_wrappers/MarketContractWrapper';
 
 interface InstanceFilledCancelledStore {
   filledOrCancelledQty: {
@@ -16,14 +16,14 @@ export class OrderFilledCancelledLazyStore {
   private _stores: {
     [marketContractAddress: string]: InstanceFilledCancelledStore;
   };
-  private _marketContractWrapper: MarketContractWrapper;
+  private _marketContractWrapper: MarketProtocolContractWrapper;
   // endregion // members
 
   // region Constructors
   // *****************************************************************
   // ****                     Constructors                        ****
   // *****************************************************************
-  constructor(marketContractWrapper: MarketContractWrapper) {
+  constructor(marketContractWrapper: MarketProtocolContractWrapper) {
     this._marketContractWrapper = marketContractWrapper;
     this._stores = {};
   }

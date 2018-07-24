@@ -3,7 +3,15 @@ import * as _ from 'lodash';
 import Web3 from 'web3';
 
 // Types
-import { ITxParams, MarketContract, MarketToken, Order, SignedOrder } from '@marketprotocol/types';
+import {
+  ERC20,
+  ITxParams,
+  MarketCollateralPool,
+  MarketContract,
+  MarketToken,
+  Order,
+  SignedOrder
+} from '@marketprotocol/types';
 import { MarketError } from '../types';
 import { ERC20TokenContractWrapper } from './ERC20TokenContractWrapper';
 import { getUserAccountBalanceAsync } from '../lib/Collateral';
@@ -12,19 +20,28 @@ import { constants } from '../constants';
 import { createOrderHashAsync, isValidSignatureAsync } from '../lib/Order';
 import { OrderTransactionInfo } from '../lib/OrderTransactionInfo';
 import { assert } from '../assert';
+import { MarketProtocolContractSetWrapper } from './MarketProtocolContractSetWrapper';
 
 /**
  * Wrapper for our MarketContract objects.  This wrapper exposes all needed functionality of the
  * MarketContract itself and stores the created MarketContract objects in a mapping for easy reuse.
  */
-export class MarketContractWrapper {
+export class MarketProtocolContractWrapper {
   // region Members
   // *****************************************************************
   // ****                     Members                             ****
   // *****************************************************************
 
   protected readonly _web3: Web3;
-  private readonly _marketContractsByAddress: { [address: string]: MarketContract };
+  protected readonly _marketProtocolSetByMarketContractAddress: {
+    [address: string]: MarketProtocolContractSetWrapper;
+  };
+
+  protected readonly _marketProtocolSetByMarketCollateralPoolAddress: {
+    [address: string]: MarketProtocolContractSetWrapper;
+  };
+
+  protected readonly _erc20TokenContractWrapper: ERC20TokenContractWrapper;
 
   // endregion // members
   // region Constructors
@@ -32,16 +49,13 @@ export class MarketContractWrapper {
   // ****                     Constructors                        ****
   // *****************************************************************
 
-  constructor(web3: Web3) {
+  constructor(web3: Web3, erc20TokenContractWrapper: ERC20TokenContractWrapper) {
     this._web3 = web3;
-    this._marketContractsByAddress = {};
+    this._erc20TokenContractWrapper = erc20TokenContractWrapper;
+    this._marketProtocolSetByMarketContractAddress = {};
+    this._marketProtocolSetByMarketCollateralPoolAddress = {};
   }
   // endregion//Constructors
-  // region Properties
-  // *****************************************************************
-  // ****                     Properties                          ****
-  // *****************************************************************
-  // endregion //Properties
 
   // region Public Methods
   // *****************************************************************
@@ -60,10 +74,10 @@ export class MarketContractWrapper {
     cancelQty: BigNumber,
     txParams: ITxParams = {}
   ): Promise<OrderTransactionInfo> {
-    const marketContract: MarketContract = await this._getMarketContractAsync(
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
       order.contractAddress
     );
-    const txHash: string = await marketContract
+    const txHash: string = await contractSetWrapper.marketContract
       .cancelOrderTx(
         [order.maker, order.taker, order.feeRecipient],
         [order.makerFee, order.takerFee, order.price, order.expirationTimestamp, order.salt],
@@ -73,7 +87,7 @@ export class MarketContractWrapper {
       .send(txParams);
 
     const blockNumber: number = Number(this._web3.eth.getTransaction(txHash).blockNumber);
-    return new OrderTransactionInfo(marketContract, order, txHash, blockNumber);
+    return new OrderTransactionInfo(contractSetWrapper.marketContract, order, txHash, blockNumber);
   }
 
   /**
@@ -96,11 +110,11 @@ export class MarketContractWrapper {
     assert.isETHAddressHex('orderLibAddress', orderLibAddress);
     // assert.isSchemaValid('SignedOrder', signedOrder, schemas.SignedOrderSchema);
 
-    const marketContract: MarketContract = await this._getMarketContractAsync(
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
       signedOrder.contractAddress
     );
 
-    const isContractSettled = await marketContract.isSettled;
+    const isContractSettled = await contractSetWrapper.marketContract.isSettled;
     if (isContractSettled) {
       return Promise.reject(new Error(MarketError.ContractAlreadySettled));
     }
@@ -141,7 +155,8 @@ export class MarketContractWrapper {
       return Promise.reject(new Error(MarketError.InvalidSignature));
     }
 
-    const collateralPoolContractAddress = await marketContract.MARKET_COLLATERAL_POOL_ADDRESS;
+    const collateralPoolContractAddress = await contractSetWrapper.marketContract
+      .MARKET_COLLATERAL_POOL_ADDRESS;
     const isMakerEnabled = await mktTokenContract.isUserEnabledForContract(
       signedOrder.contractAddress,
       maker
@@ -234,7 +249,7 @@ export class MarketContractWrapper {
       return Promise.reject(new Error(MarketError.InsufficientCollateralBalance));
     }
 
-    const txHash: string = await marketContract
+    const txHash: string = await contractSetWrapper.marketContract
       .tradeOrderTx(
         // orderAddresses
         [signedOrder.maker, signedOrder.taker, signedOrder.feeRecipient],
@@ -257,7 +272,7 @@ export class MarketContractWrapper {
     const blockNumber: number = Number(this._web3.eth.getTransaction(txHash).blockNumber);
 
     return Promise.resolve(
-      new OrderTransactionInfo(marketContract, signedOrder, txHash, blockNumber)
+      new OrderTransactionInfo(contractSetWrapper.marketContract, signedOrder, txHash, blockNumber)
     );
   }
 
@@ -271,10 +286,10 @@ export class MarketContractWrapper {
     marketContractAddress: string,
     orderHash: string
   ): Promise<BigNumber> {
-    const marketContract: MarketContract = await this._getMarketContractAsync(
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
     );
-    return marketContract.getQtyFilledOrCancelledFromOrder(orderHash);
+    return contractSetWrapper.marketContract.getQtyFilledOrCancelledFromOrder(orderHash);
   }
 
   /**
@@ -283,10 +298,10 @@ export class MarketContractWrapper {
    * @returns {Promise<string>}               The contract's name
    */
   public async getMarketContractNameAsync(marketContractAddress: string): Promise<string> {
-    const marketContract: MarketContract = await this._getMarketContractAsync(
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
     );
-    return marketContract.CONTRACT_NAME;
+    return contractSetWrapper.marketContract.CONTRACT_NAME;
   }
 
   /**
@@ -297,10 +312,10 @@ export class MarketContractWrapper {
   public async getMarketContractPriceDecimalPlacesAsync(
     marketContractAddress: string
   ): Promise<BigNumber> {
-    const marketContract: MarketContract = await this._getMarketContractAsync(
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
     );
-    return marketContract.PRICE_DECIMAL_PLACES;
+    return contractSetWrapper.marketContract.PRICE_DECIMAL_PLACES;
   }
 
   /**
@@ -311,10 +326,10 @@ export class MarketContractWrapper {
   public async getCollateralPoolContractAddressAsync(
     marketContractAddress: string
   ): Promise<string> {
-    const marketContract: MarketContract = await this._getMarketContractAsync(
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
     );
-    return marketContract.MARKET_COLLATERAL_POOL_ADDRESS;
+    return contractSetWrapper.marketContract.MARKET_COLLATERAL_POOL_ADDRESS;
   }
 
   /**
@@ -331,14 +346,14 @@ export class MarketContractWrapper {
     qty: BigNumber,
     price: BigNumber
   ): Promise<BigNumber> {
-    const marketContract: MarketContract = await this._getMarketContractAsync(
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
     );
 
     return Utils.calculateNeededCollateral(
-      await marketContract.PRICE_FLOOR,
-      await marketContract.PRICE_CAP,
-      await marketContract.QTY_MULTIPLIER,
+      await contractSetWrapper.marketContract.PRICE_FLOOR,
+      await contractSetWrapper.marketContract.PRICE_CAP,
+      await contractSetWrapper.marketContract.QTY_MULTIPLIER,
       qty,
       price
     );
@@ -350,21 +365,52 @@ export class MarketContractWrapper {
   // ****                    Protected Methods                    ****
   // *****************************************************************
   /**
-   * Allow for retrieval or creation of a given MarketContract
-   * @param {string} marketAddress        address of MarketContract
-   * @returns {Promise<MarketContract>}   MarketContract object
+   * Allow for retrieval or creation of a given MarketProtocolContractSetWrapper
+   * @param {string} marketContractAddress                address of MarketContract
+   * @returns {Promise<MarketProtocolContractSetWrapper>} MarketProtocolContractSetWrapper object
    * @private
    */
-  protected async _getMarketContractAsync(marketAddress: string): Promise<MarketContract> {
-    const normalizedMarketAddress = marketAddress.toLowerCase();
-    let tokenContract = this._marketContractsByAddress[normalizedMarketAddress];
-    if (!_.isUndefined(tokenContract)) {
-      return tokenContract;
+  protected async _getContractSetByMarketContractAddressAsync(
+    marketContractAddress: string
+  ): Promise<MarketProtocolContractSetWrapper> {
+    const normalizedMarketAddress = marketContractAddress.toLowerCase();
+    let contractSetWrapper: MarketProtocolContractSetWrapper = this
+      ._marketProtocolSetByMarketContractAddress[normalizedMarketAddress];
+
+    if (!_.isUndefined(contractSetWrapper)) {
+      return contractSetWrapper;
     }
-    tokenContract = new MarketContract(this._web3, marketAddress);
-    this._marketContractsByAddress[normalizedMarketAddress] = tokenContract;
-    return tokenContract;
+
+    contractSetWrapper = await this.createNewMarketContractSetFromMarketContractAddressAsync(
+      marketContractAddress
+    );
+    this._marketProtocolSetByMarketContractAddress[normalizedMarketAddress] = contractSetWrapper;
+    this._marketProtocolSetByMarketCollateralPoolAddress[
+      contractSetWrapper.marketCollateralPool.address
+    ] = contractSetWrapper;
+    return contractSetWrapper;
   }
+
+  /**
+   * Creates a new contract set from a MarketContract address
+   * @param {string} marketContractAddress
+   * @returns {Promise<MarketProtocolContractSetWrapper>}
+   */
+  protected async createNewMarketContractSetFromMarketContractAddressAsync(
+    marketContractAddress: string
+  ): Promise<MarketProtocolContractSetWrapper> {
+    const marketContract: MarketContract = new MarketContract(this._web3, marketContractAddress);
+    const marketCollateralPool: MarketCollateralPool = new MarketCollateralPool(
+      this._web3,
+      await marketContract.MARKET_COLLATERAL_POOL_ADDRESS
+    );
+    const erc20: ERC20 = await this._erc20TokenContractWrapper.getERC20TokenContractAsync(
+      await marketContract.COLLATERAL_TOKEN_ADDRESS
+    );
+
+    return new MarketProtocolContractSetWrapper(marketContract, marketCollateralPool, erc20);
+  }
+
   // endregion //Protected Methods
 
   // region Private Methods
