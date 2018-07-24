@@ -20,14 +20,6 @@ import { assert } from './assert';
 import { ERC20TokenContractWrapper } from './contract_wrappers/ERC20TokenContractWrapper';
 
 import {
-  CollateralEvent,
-  getCollateralEventsAsync,
-  getUserAccountBalanceAsync,
-  settleAndCloseAsync,
-  withdrawCollateralAsync
-} from './lib/Collateral';
-
-import {
   deployMarketCollateralPoolAsync,
   deployMarketContractOraclizeAsync
 } from './lib/Deployment';
@@ -41,6 +33,7 @@ import {
 import { OrderTransactionInfo } from './lib/OrderTransactionInfo';
 import { MARKETProtocolArtifacts } from './MARKETProtocolArtifacts';
 import { MarketProtocolOraclizeContractWrapper } from './contract_wrappers/MarketProtocolOraclizeContractWrapper';
+import { CollateralEvent } from './contract_wrappers/MarketProtocolContractWrapper';
 
 /**
  * The `Market` class is the single entry-point into the MARKET.js library.
@@ -155,7 +148,7 @@ export class Market {
 
   /**
    * Deposits collateral to a traders account for a given contract address.
-   * @param {string} marketContractAddress           Address of the CollateralToken
+   * @param {string} marketContractAddress            Address of the MarketContract
    * @param {BigNumber | number} depositAmount        Amount of ERC20 collateral to deposit
    * @param {ITxParams} txParams                      Transaction parameters
    * @returns {Promise<string>}                       The transaction hash.
@@ -174,49 +167,47 @@ export class Market {
 
   /**
    * Gets the user's currently unallocated token balance
-   * @param {string} collateralPoolContractAddress    Address of the MarketCollateralPool
+   * @param {string} marketContractAddress            Address of the MarketContract
    * @param {BigNumber | string} userAddress          Address of user
    * @returns {Promise<BigNumber|null>}               The user's currently unallocated token balance
    */
   public async getUserAccountBalanceAsync(
-    collateralPoolContractAddress: string,
+    marketContractAddress: string,
     userAddress: string
   ): Promise<BigNumber | null> {
-    return getUserAccountBalanceAsync(
-      this._web3.currentProvider,
-      collateralPoolContractAddress,
+    return this.marketContractWrapper.getUserAccountBalanceAsync(
+      marketContractAddress,
       userAddress
     );
   }
 
   /**
    * Close all open positions post settlement and withdraws all collateral from a expired contract
-   * @param {string} collateralPoolContractAddress    Address of the MarketCollateralPool
+   * @param {string} marketContractAddress            Address of the MarketContract
    * @param {ITxParams} txParams                      Transaction parameters
    * @returns {Promise<string>}                       The transaction hash.
    */
   public async settleAndCloseAsync(
-    collateralPoolContractAddress: string,
+    marketContractAddress: string,
     txParams: ITxParams = {}
   ): Promise<string> {
-    return settleAndCloseAsync(this._web3.currentProvider, collateralPoolContractAddress, txParams);
+    return this.marketContractWrapper.settleAndCloseAsync(marketContractAddress, txParams);
   }
 
   /**
    * Withdraws collateral from a traders account back to their own address.
-   * @param {string} collateralPoolContractAddress    Address of the MarketCollateralPool
+   * @param {string} marketContractAddress            Address of the MarketContract
    * @param {BigNumber | number} withdrawAmount       Amount of ERC20 collateral to withdraw
    * @param {ITxParams} txParams                      Transaction parameters
    * @returns {Promise<string>}                      The transaction hash.
    */
   public async withdrawCollateralAsync(
-    collateralPoolContractAddress: string,
+    marketContractAddress: string,
     withdrawAmount: BigNumber | number,
     txParams: ITxParams = {}
   ): Promise<string> {
-    return withdrawCollateralAsync(
-      this._web3.currentProvider,
-      collateralPoolContractAddress,
+    return this.marketContractWrapper.withdrawCollateralAsync(
+      marketContractAddress,
       withdrawAmount,
       txParams
     );
@@ -224,21 +215,20 @@ export class Market {
 
   /**
    * Gets the history of deposits and withdrawals for a given collateral pool address.
-   * @param {string} collateralPoolContractAddress    address of the MarketCollateralPool
+   * @param {string} marketContractAddress            Address of the MarketContract
    * @param {string | number} fromBlock               from block #
    * @param {string | number} toBlock                 to block #
    * @param {string} userAddress                      only search for deposits/withdrawals to/from a specified address
    * @returns {Promise<CollateralEvent[]>}
    */
   public async getCollateralEventsAsync(
-    collateralPoolContractAddress: string,
+    marketContractAddress: string,
     fromBlock: number | string = '0x0',
     toBlock: number | string = 'latest',
     userAddress: string | null = null
   ): Promise<CollateralEvent[]> {
-    return getCollateralEventsAsync(
-      this._web3.currentProvider,
-      collateralPoolContractAddress,
+    return this.marketContractWrapper.getCollateralEventsAsync(
+      marketContractAddress,
       fromBlock,
       toBlock,
       userAddress
