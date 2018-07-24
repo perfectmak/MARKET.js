@@ -21,7 +21,7 @@ import { ERC20TokenContractWrapper } from '../contract_wrappers/ERC20TokenContra
  * @param {string} collateralTokenAddress           Address of the CollateralToken
  * @param {BigNumber | number} depositAmount        amount of ERC20 collateral to deposit
  * @param {ITxParams} txParams                      transaction parameters
- * @returns {Promise<boolean>} true if successful
+ * @returns {Promise<string>}                      The transaction hash
  */
 export async function depositCollateralAsync(
   provider: Provider,
@@ -30,7 +30,7 @@ export async function depositCollateralAsync(
   collateralTokenAddress: string,
   depositAmount: BigNumber | number,
   txParams: ITxParams = {}
-): Promise<boolean> {
+): Promise<string> {
   const web3: Web3 = new Web3();
   web3.setProvider(provider);
 
@@ -48,7 +48,7 @@ export async function depositCollateralAsync(
     caller
   );
   if (!isUserEnabled) {
-    return Promise.reject<boolean>(new Error(MarketError.UserNotEnabledForContract));
+    return Promise.reject<string>(new Error(MarketError.UserNotEnabledForContract));
   }
 
   // Ensure caller has sufficient collateral token balance
@@ -57,7 +57,7 @@ export async function depositCollateralAsync(
     await erc20ContractWrapper.getBalanceAsync(collateralToken.address, caller)
   );
   if (callerCollateralTokenBalance.isLessThan(depositAmount)) {
-    return Promise.reject<boolean>(new Error(MarketError.InsufficientBalanceForTransfer));
+    return Promise.reject<string>(new Error(MarketError.InsufficientBalanceForTransfer));
   }
 
   // Ensure caller has approved sufficient amount
@@ -69,11 +69,10 @@ export async function depositCollateralAsync(
     )
   );
   if (callerAllowance.isLessThan(depositAmount)) {
-    return Promise.reject<boolean>(new Error(MarketError.InsufficientAllowanceForTransfer));
+    return Promise.reject<string>(new Error(MarketError.InsufficientAllowanceForTransfer));
   }
 
-  await collateralPool.depositTokensForTradingTx(depositAmount).send(txParams);
-  return true;
+  return collateralPool.depositTokensForTradingTx(depositAmount).send(txParams);
 }
 
 /**
@@ -113,13 +112,13 @@ export async function getUserAccountBalanceAsync(
  * @param {Provider} provider                       Web3 provider instance.
  * @param {string} collateralPoolContractAddress    address of the MarketCollateralPool
  * @param {ITxParams} txParams                      transaction parameters
- * @returns {Promise<boolean>} true if successful
+ * @returns {Promise<string>}                       The transaction hash
  */
 export async function settleAndCloseAsync(
   provider: Provider,
   collateralPoolContractAddress: string,
   txParams: ITxParams = {}
-): Promise<boolean> {
+): Promise<string> {
   const web3: Web3 = new Web3();
   web3.setProvider(provider);
 
@@ -127,8 +126,7 @@ export async function settleAndCloseAsync(
     web3,
     collateralPoolContractAddress
   );
-  await collateralPool.settleAndCloseTx().send(txParams);
-  return true;
+  return collateralPool.settleAndCloseTx().send(txParams);
 }
 
 /**
@@ -137,14 +135,14 @@ export async function settleAndCloseAsync(
  * @param {string} collateralPoolContractAddress    address of the MarketCollateralPool
  * @param {BigNumber | number} withdrawAmount        amount of ERC20 collateral to withdraw
  * @param {ITxParams} txParams                      transaction parameters
- * @returns {Promise<boolean>} true if successful
+ * @returns {Promise<string>}                       The transaction hash.
  */
 export async function withdrawCollateralAsync(
   provider: Provider,
   collateralPoolContractAddress: string,
   withdrawAmount: BigNumber | number,
   txParams: ITxParams = {}
-): Promise<boolean> {
+): Promise<string> {
   const web3: Web3 = new Web3();
   web3.setProvider(provider);
 
@@ -157,11 +155,9 @@ export async function withdrawCollateralAsync(
   const caller: string = String(txParams.from);
   const balance = new BigNumber(await collateralPool.getUserAccountBalance(caller));
   if (balance.isLessThan(withdrawAmount)) {
-    return Promise.reject<boolean>(new Error(MarketError.InsufficientBalanceForTransfer));
+    return Promise.reject<string>(new Error(MarketError.InsufficientBalanceForTransfer));
   }
-
-  await collateralPool.withdrawTokensTx(withdrawAmount).send(txParams);
-  return true;
+  return collateralPool.withdrawTokensTx(withdrawAmount).send(txParams);
 }
 
 export interface CollateralEvent {

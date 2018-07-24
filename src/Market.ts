@@ -160,14 +160,14 @@ export class Market {
    * @param {string} collateralTokenAddress           Address of the CollateralToken
    * @param {BigNumber | number} depositAmount        Amount of ERC20 collateral to deposit
    * @param {ITxParams} txParams                      Transaction parameters
-   * @returns {Promise<boolean>}                      true if successful
+   * @returns {Promise<string>}                       The transaction hash.
    */
   public async depositCollateralAsync(
     collateralPoolContractAddress: string,
     collateralTokenAddress: string,
     depositAmount: BigNumber | number,
     txParams: ITxParams = {}
-  ): Promise<boolean> {
+  ): Promise<string> {
     return depositCollateralAsync(
       this._web3.currentProvider,
       this.mktTokenContract,
@@ -199,12 +199,12 @@ export class Market {
    * Close all open positions post settlement and withdraws all collateral from a expired contract
    * @param {string} collateralPoolContractAddress    Address of the MarketCollateralPool
    * @param {ITxParams} txParams                      Transaction parameters
-   * @returns {Promise<boolean>}                      true if successful
+   * @returns {Promise<string>}                       The transaction hash.
    */
   public async settleAndCloseAsync(
     collateralPoolContractAddress: string,
     txParams: ITxParams = {}
-  ): Promise<boolean> {
+  ): Promise<string> {
     return settleAndCloseAsync(this._web3.currentProvider, collateralPoolContractAddress, txParams);
   }
 
@@ -213,13 +213,13 @@ export class Market {
    * @param {string} collateralPoolContractAddress    Address of the MarketCollateralPool
    * @param {BigNumber | number} withdrawAmount       Amount of ERC20 collateral to withdraw
    * @param {ITxParams} txParams                      Transaction parameters
-   * @returns {Promise<boolean>}                      true if successful
+   * @returns {Promise<string>}                      The transaction hash.
    */
   public async withdrawCollateralAsync(
     collateralPoolContractAddress: string,
     withdrawAmount: BigNumber | number,
     txParams: ITxParams = {}
-  ): Promise<boolean> {
+  ): Promise<string> {
     return withdrawCollateralAsync(
       this._web3.currentProvider,
       collateralPoolContractAddress,
