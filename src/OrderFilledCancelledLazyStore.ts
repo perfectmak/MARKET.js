@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js';
 import * as _ from 'lodash';
-import { MarketProtocolContractWrapper } from './contract_wrappers/MarketContractWrapper';
+import { MarketProtocolContractWrapper } from './contract_wrappers/MarketProtocolContractWrapper';
 
 interface InstanceFilledCancelledStore {
   filledOrCancelledQty: {

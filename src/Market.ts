@@ -18,7 +18,6 @@ import { MARKETProtocolConfig } from './types';
 
 import { assert } from './assert';
 import { ERC20TokenContractWrapper } from './contract_wrappers/ERC20TokenContractWrapper';
-import { MarketProtocolOraclizeContractWrapper } from './contract_wrappers/MarketContractOraclizeWrapper';
 
 import {
   CollateralEvent,
@@ -42,6 +41,7 @@ import {
 } from './lib/Order';
 import { OrderTransactionInfo } from './lib/OrderTransactionInfo';
 import { MARKETProtocolArtifacts } from './MARKETProtocolArtifacts';
+import { MarketProtocolOraclizeContractWrapper } from './contract_wrappers/MarketProtocolOraclizeContractWrapper';
 
 /**
  * The `Market` class is the single entry-point into the MARKET.js library.
@@ -124,7 +124,7 @@ export class Market {
     /* tslint:enable */
 
     this.erc20TokenContractWrapper = new ERC20TokenContractWrapper(this._web3);
-    this.marketContractWrapper = new MarketProtocolOraclizeContractWrapper(this._web3);
+    this.marketContractWrapper = new MarketProtocolOraclizeContractWrapper(this._web3, this.erc20TokenContractWrapper);
   }
   // endregion//Constructors
 
