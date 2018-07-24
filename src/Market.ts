@@ -21,7 +21,6 @@ import { ERC20TokenContractWrapper } from './contract_wrappers/ERC20TokenContrac
 
 import {
   CollateralEvent,
-  depositCollateralAsync,
   getCollateralEventsAsync,
   getUserAccountBalanceAsync,
   settleAndCloseAsync,
@@ -124,7 +123,7 @@ export class Market {
     /* tslint:enable */
 
     this.erc20TokenContractWrapper = new ERC20TokenContractWrapper(this._web3);
-    this.marketContractWrapper = new MarketProtocolOraclizeContractWrapper(this._web3, this.erc20TokenContractWrapper);
+    this.marketContractWrapper = new MarketProtocolOraclizeContractWrapper(this._web3, this);
   }
   // endregion//Constructors
 
@@ -156,23 +155,18 @@ export class Market {
 
   /**
    * Deposits collateral to a traders account for a given contract address.
-   * @param {string} collateralPoolContractAddress    Address of the MarketCollateralPool
-   * @param {string} collateralTokenAddress           Address of the CollateralToken
+   * @param {string} marketContractAddress           Address of the CollateralToken
    * @param {BigNumber | number} depositAmount        Amount of ERC20 collateral to deposit
    * @param {ITxParams} txParams                      Transaction parameters
    * @returns {Promise<string>}                       The transaction hash.
    */
   public async depositCollateralAsync(
-    collateralPoolContractAddress: string,
-    collateralTokenAddress: string,
+    marketContractAddress: string,
     depositAmount: BigNumber | number,
     txParams: ITxParams = {}
   ): Promise<string> {
-    return depositCollateralAsync(
-      this._web3.currentProvider,
-      this.mktTokenContract,
-      collateralPoolContractAddress,
-      collateralTokenAddress,
+    return this.marketContractWrapper.depositCollateralAsync(
+      marketContractAddress,
       depositAmount,
       txParams
     );

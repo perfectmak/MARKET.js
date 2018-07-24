@@ -1,80 +1,16 @@
 import BigNumber from 'bignumber.js';
 import Web3 from 'web3';
+import * as Decoder from 'ethereum-input-data-decoder';
 
 // Types
 import { Provider, Transaction } from '@0xproject/types';
 import {
-  CollateralToken,
   ITxParams,
   MarketCollateralPool,
-  MarketToken
 } from '@marketprotocol/types';
 import { MarketError } from '../types';
-import { ERC20TokenContractWrapper } from '../contract_wrappers/ERC20TokenContractWrapper';
 
-const Decoder = require('ethereum-input-data-decoder');
 
-/**
- * deposits collateral to a traders account for a given contract address.
- * @param {Provider} provider                       Web3 provider instance.
- * @param {MarketToken} mktTokenContract            MarketToken contract
- * @param {string} collateralPoolContractAddress    address of the MarketCollateralPool
- * @param {string} collateralTokenAddress           Address of the CollateralToken
- * @param {BigNumber | number} depositAmount        amount of ERC20 collateral to deposit
- * @param {ITxParams} txParams                      transaction parameters
- * @returns {Promise<string>}                      The transaction hash
- */
-export async function depositCollateralAsync(
-  provider: Provider,
-  mktTokenContract: MarketToken,
-  collateralPoolContractAddress: string,
-  collateralTokenAddress: string,
-  depositAmount: BigNumber | number,
-  txParams: ITxParams = {}
-): Promise<string> {
-  const web3: Web3 = new Web3();
-  web3.setProvider(provider);
-
-  const collateralPool: MarketCollateralPool = new MarketCollateralPool(
-    web3,
-    collateralPoolContractAddress
-  );
-
-  const collateralToken: CollateralToken = new CollateralToken(web3, collateralTokenAddress);
-
-  // Ensure caller is enabled for contract
-  const caller: string = String(txParams.from);
-  const isUserEnabled = await mktTokenContract.isUserEnabledForContract(
-    mktTokenContract.address,
-    caller
-  );
-  if (!isUserEnabled) {
-    return Promise.reject<string>(new Error(MarketError.UserNotEnabledForContract));
-  }
-
-  // Ensure caller has sufficient collateral token balance
-  const erc20ContractWrapper: ERC20TokenContractWrapper = new ERC20TokenContractWrapper(web3);
-  const callerCollateralTokenBalance: BigNumber = new BigNumber(
-    await erc20ContractWrapper.getBalanceAsync(collateralToken.address, caller)
-  );
-  if (callerCollateralTokenBalance.isLessThan(depositAmount)) {
-    return Promise.reject<string>(new Error(MarketError.InsufficientBalanceForTransfer));
-  }
-
-  // Ensure caller has approved sufficient amount
-  const callerAllowance: BigNumber = new BigNumber(
-    await erc20ContractWrapper.getAllowanceAsync(
-      collateralToken.address,
-      caller,
-      collateralPool.address
-    )
-  );
-  if (callerAllowance.isLessThan(depositAmount)) {
-    return Promise.reject<string>(new Error(MarketError.InsufficientAllowanceForTransfer));
-  }
-
-  return collateralPool.depositTokensForTradingTx(depositAmount).send(txParams);
-}
 
 /**
  * Gets the user's currently unallocated token balance
@@ -182,9 +118,9 @@ export interface CollateralEvent {
 export async function getCollateralEventsAsync(
   provider: Provider,
   collateralPoolContractAddress: string,
-  fromBlock: number | string = '0x0',
-  toBlock: number | string = 'latest',
-  userAddress: string | null = null
+  fromBlock: number|string = '0x0',
+  toBlock: number|string = 'latest',
+  userAddress: string|null = null,
 ): Promise<CollateralEvent[]> {
   const web3: Web3 = new Web3();
   web3.setProvider(provider);
@@ -209,7 +145,7 @@ export async function getCollateralEventsAsync(
         resolve(tx);
       });
     });
-    const decoder = new Decoder(collateralPool.contractAbi);
+    const decoder = new Decoder.default(collateralPool.contractAbi);
     const input = decoder.decodeData(transaction.input);
     const event: CollateralEvent = {
       type: input.name === 'depositTokensForTrading' ? 'deposit' : 'withdrawal',
@@ -222,8 +158,8 @@ export async function getCollateralEventsAsync(
     if (!userAddress) {
       collateralEvents.push(event);
     }
-    if (userAddress === transaction.from || userAddress === transaction.to) {
-      collateralEvents.push(event);
+    if ((userAddress === transaction.from) || (userAddress === transaction.to)) {
+        collateralEvents.push(event);
     }
   }
   return collateralEvents;

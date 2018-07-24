@@ -21,6 +21,7 @@ import { createOrderHashAsync, isValidSignatureAsync } from '../lib/Order';
 import { OrderTransactionInfo } from '../lib/OrderTransactionInfo';
 import { assert } from '../assert';
 import { MarketProtocolContractSetWrapper } from './MarketProtocolContractSetWrapper';
+import { Market } from '../Market';
 
 /**
  * Wrapper for our MarketContract objects.  This wrapper exposes all needed functionality of the
@@ -42,6 +43,7 @@ export class MarketProtocolContractWrapper {
   };
 
   protected readonly _erc20TokenContractWrapper: ERC20TokenContractWrapper;
+  protected readonly _market: Market;
 
   // endregion // members
   // region Constructors
@@ -49,9 +51,10 @@ export class MarketProtocolContractWrapper {
   // ****                     Constructors                        ****
   // *****************************************************************
 
-  constructor(web3: Web3, erc20TokenContractWrapper: ERC20TokenContractWrapper) {
+  constructor(web3: Web3, market: Market) {
     this._web3 = web3;
-    this._erc20TokenContractWrapper = erc20TokenContractWrapper;
+    this._market = market;
+    this._erc20TokenContractWrapper = market.erc20TokenContractWrapper;
     this._marketProtocolSetByMarketContractAddress = {};
     this._marketProtocolSetByMarketCollateralPoolAddress = {};
   }
@@ -357,6 +360,57 @@ export class MarketProtocolContractWrapper {
       qty,
       price
     );
+  }
+
+  /**
+   * deposits collateral to a traders account for a given contract address.
+   * @param {string} marketContractAddress            Address of the MarketContract
+   * @param {BigNumber | number} depositAmount        amount of ERC20 collateral to deposit
+   * @param {ITxParams} txParams                      transaction parameters
+   * @returns {Promise<string>}                       The transaction hash
+   */
+  public async depositCollateralAsync(
+    marketContractAddress: string,
+    depositAmount: BigNumber | number,
+    txParams: ITxParams = {}
+  ): Promise<string> {
+
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+
+    // Ensure caller is enabled for contract
+    const caller: string = String(txParams.from);
+    const isUserEnabled = await this._market.mktTokenContract.isUserEnabledForContract(
+      marketContractAddress,
+      caller
+    );
+
+    if (!isUserEnabled) {
+      return Promise.reject<string>(new Error(MarketError.UserNotEnabledForContract));
+    }
+
+    // Ensure caller has sufficient collateral token balance
+    const callerCollateralTokenBalance: BigNumber =
+      await this._erc20TokenContractWrapper.getBalanceAsync(contractSetWrapper.collateralToken.address, caller);
+
+    if (callerCollateralTokenBalance.isLessThan(depositAmount)) {
+      return Promise.reject<string>(new Error(MarketError.InsufficientBalanceForTransfer));
+    }
+
+    // Ensure caller has approved sufficient amount
+    const callerAllowance: BigNumber = new BigNumber(
+      await this._erc20TokenContractWrapper.getAllowanceAsync(
+      contractSetWrapper.collateralToken.address,
+      caller,
+      contractSetWrapper.marketCollateralPool.address
+    )
+  );
+    if (callerAllowance.isLessThan(depositAmount)) {
+      return Promise.reject<string>(new Error(MarketError.InsufficientAllowanceForTransfer));
+    }
+
+    return contractSetWrapper.marketCollateralPool.depositTokensForTradingTx(depositAmount).send(txParams);
   }
   // endregion //Public Methods
 

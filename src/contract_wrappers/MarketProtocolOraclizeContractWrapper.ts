@@ -8,6 +8,7 @@ import { ERC20TokenContractWrapper } from './ERC20TokenContractWrapper';
 import { MarketProtocolContractSetWrapper } from './MarketProtocolContractSetWrapper';
 import { MarketProtocolOraclizeContractSetWrapper } from './MarketProtocolOraclizeContractSetWrapper';
 import { MarketProtocolContractWrapper } from './MarketProtocolContractWrapper';
+import { Market } from '../Market';
 
 /**
  * Wrapper for our MarketContractOraclize objects.  This wrapper exposes all needed functionality of the
@@ -31,8 +32,8 @@ export class MarketProtocolOraclizeContractWrapper extends MarketProtocolContrac
   // *****************************************************************
   // ****                     Constructors                        ****
   // *****************************************************************
-  constructor(web3: Web3, erc20TokenContractWrapper: ERC20TokenContractWrapper) {
-    super(web3, erc20TokenContractWrapper);
+  constructor(web3: Web3, market: Market) {
+    super(web3, market);
     this._marketProtocolSetByMarketContractAddress = {};
     this._marketProtocolSetByMarketCollateralPoolAddress = {};
   }
