@@ -14,7 +14,6 @@ import {
 } from '@marketprotocol/types';
 import { MarketError } from '../types';
 import { ERC20TokenContractWrapper } from './ERC20TokenContractWrapper';
-import { getUserAccountBalanceAsync } from '../lib/Collateral';
 import { Utils } from '../lib/Utils';
 import { constants } from '../constants';
 import { createOrderHashAsync, isValidSignatureAsync } from '../lib/Order';
@@ -22,6 +21,17 @@ import { OrderTransactionInfo } from '../lib/OrderTransactionInfo';
 import { assert } from '../assert';
 import { MarketProtocolContractSetWrapper } from './MarketProtocolContractSetWrapper';
 import { Market } from '../Market';
+import * as Decoder from 'ethereum-input-data-decoder';
+import { Transaction } from '@0xproject/types';
+
+export interface CollateralEvent {
+  type: string;
+  from: string | null;
+  to: string | null;
+  amount: BigNumber;
+  blockNumber: number | null;
+  txHash: string;
+}
 
 /**
  * Wrapper for our MarketContract objects.  This wrapper exposes all needed functionality of the
@@ -218,16 +228,14 @@ export class MarketProtocolContractWrapper {
     }
 
     const makerCollateralBalance: BigNumber = new BigNumber(
-      await getUserAccountBalanceAsync(
-        this._web3.currentProvider,
-        collateralPoolContractAddress,
+      await this.getUserAccountBalanceAsync(
+        signedOrder.contractAddress,
         maker
       )
     );
     const takerCollateralBalance: BigNumber = new BigNumber(
-      await getUserAccountBalanceAsync(
-        this._web3.currentProvider,
-        collateralPoolContractAddress,
+      await this.getUserAccountBalanceAsync(
+        signedOrder.contractAddress,
         taker
       )
     );
@@ -387,7 +395,7 @@ export class MarketProtocolContractWrapper {
     );
 
     if (!isUserEnabled) {
-      return Promise.reject<string>(new Error(MarketError.UserNotEnabledForContract));
+      return Promise.reject(new Error(MarketError.UserNotEnabledForContract));
     }
 
     // Ensure caller has sufficient collateral token balance
@@ -395,7 +403,7 @@ export class MarketProtocolContractWrapper {
       await this._erc20TokenContractWrapper.getBalanceAsync(contractSetWrapper.collateralToken.address, caller);
 
     if (callerCollateralTokenBalance.isLessThan(depositAmount)) {
-      return Promise.reject<string>(new Error(MarketError.InsufficientBalanceForTransfer));
+      return Promise.reject(new Error(MarketError.InsufficientBalanceForTransfer));
     }
 
     // Ensure caller has approved sufficient amount
@@ -407,11 +415,126 @@ export class MarketProtocolContractWrapper {
     )
   );
     if (callerAllowance.isLessThan(depositAmount)) {
-      return Promise.reject<string>(new Error(MarketError.InsufficientAllowanceForTransfer));
+      return Promise.reject(new Error(MarketError.InsufficientAllowanceForTransfer));
     }
 
     return contractSetWrapper.marketCollateralPool.depositTokensForTradingTx(depositAmount).send(txParams);
   }
+
+  /**
+   * Gets the user's currently unallocated token balance
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {BigNumber | string} userAddress     address of user
+   * @returns {Promise<BigNumber>}               the user's currently unallocated token balance
+   */
+  public async getUserAccountBalanceAsync(
+    marketContractAddress: string,
+    userAddress: string
+  ): Promise<BigNumber> {
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+    return contractSetWrapper.marketCollateralPool.getUserAccountBalance(userAddress);
+  }
+
+  /**
+   * withdraws collateral from a traders account back to their own address.
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {BigNumber | number} withdrawAmount        amount of ERC20 collateral to withdraw
+   * @param {ITxParams} txParams                      transaction parameters
+   * @returns {Promise<string>}                       The transaction hash.
+   */
+  public async withdrawCollateralAsync(
+    marketContractAddress: string,
+    withdrawAmount: BigNumber | number,
+    txParams: ITxParams = {}
+  ): Promise<string> {
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+
+    // Ensure caller has sufficient collateral pool balance
+    const caller: string = String(txParams.from);
+    const balance = new BigNumber(await contractSetWrapper.marketCollateralPool.getUserAccountBalance(caller));
+    if (balance.isLessThan(withdrawAmount)) {
+      return Promise.reject(new Error(MarketError.InsufficientBalanceForTransfer));
+    }
+    return contractSetWrapper.marketCollateralPool.withdrawTokensTx(withdrawAmount).send(txParams);
+  }
+
+
+  /**
+   * close all open positions post settlement and withdraws all collateral from a expired contract
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {ITxParams} txParams                      transaction parameters
+   * @returns {Promise<string>}                       The transaction hash
+   */
+  public async settleAndCloseAsync(
+    marketContractAddress: string,
+    txParams: ITxParams = {}
+  ): Promise<string> {
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+    return contractSetWrapper.marketCollateralPool.settleAndCloseTx().send(txParams);
+  }
+
+
+  /**
+   * Gets the history of deposits and withdrawals for a given collateral pool address.
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {string} fromBlock                        from block #
+   * @param {string} toBlock                          to block #
+   * @param {string} userAddress                      only search for deposits/withdrawals to/from a specified address
+   * @returns {Promise<CollateralEvent[]>}
+   */
+  public async getCollateralEventsAsync(
+    marketContractAddress: string,
+    fromBlock: number|string = '0x0',
+    toBlock: number|string = 'latest',
+    userAddress: string|null = null,
+  ): Promise<CollateralEvent[]> {
+    const contractSetWrapper: MarketProtocolContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+
+    let collateralEvents: CollateralEvent[] = [];
+
+    const logs = await contractSetWrapper.marketCollateralPool.UpdatedUserBalanceEvent({}).get({
+      fromBlock: fromBlock,
+      toBlock: toBlock
+    });
+    for (let e of logs) {
+      const transaction = await new Promise<Transaction>((resolve, reject) => {
+        this._web3.eth.getTransaction(e.transactionHash, (err: Error, tx: Transaction) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(tx);
+        });
+      });
+      const decoder = new Decoder.default(contractSetWrapper.marketCollateralPool.contractAbi);
+      const input = decoder.decodeData(transaction.input);
+      const event: CollateralEvent = {
+        type: input.name === 'depositTokensForTrading' ? 'deposit' : 'withdrawal',
+        from: input.name === 'depositTokensForTrading' ? transaction.from : transaction.to,
+        to: input.name === 'depositTokensForTrading' ? transaction.to : transaction.from,
+        amount: input.inputs[0],
+        blockNumber: transaction.blockNumber,
+        txHash: transaction.hash
+      };
+      if (!userAddress) {
+        collateralEvents.push(event);
+      }
+      if ((userAddress === transaction.from) || (userAddress === transaction.to)) {
+        collateralEvents.push(event);
+      }
+    }
+    return collateralEvents;
+  }
+
+
+
   // endregion //Public Methods
 
   // region Protected Methods
