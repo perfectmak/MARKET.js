@@ -55,12 +55,12 @@ describe('Order filled/cancelled store', async () => {
     orderQty = new BigNumber(100);
     price = new BigNumber(100000);
     fees = new BigNumber(0);
-    let makerCollateral = await market.getUserAccountBalanceAsync(collateralPoolAddress, maker);
-    let takerCollateral = await market.getUserAccountBalanceAsync(collateralPoolAddress, taker);
-    await market.withdrawCollateralAsync(collateralPoolAddress, makerCollateral, {
+    let makerCollateral = await market.getUserAccountBalanceAsync(contractAddress, maker);
+    let takerCollateral = await market.getUserAccountBalanceAsync(contractAddress, taker);
+    await market.withdrawCollateralAsync(contractAddress, makerCollateral, {
       from: maker
     });
-    await market.withdrawCollateralAsync(collateralPoolAddress, takerCollateral, {
+    await market.withdrawCollateralAsync(contractAddress, takerCollateral, {
       from: taker
     });
     signedOrder = await market.createSignedOrderAsync(
@@ -85,8 +85,7 @@ describe('Order filled/cancelled store', async () => {
     await collateralToken.transferTx(maker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
     await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
+      contractAddress,
       initialCredit,
       {
         from: maker
@@ -95,8 +94,7 @@ describe('Order filled/cancelled store', async () => {
     await collateralToken.transferTx(taker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
     await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
+      contractAddress,
       initialCredit,
       {
         from: taker

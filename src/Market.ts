@@ -174,7 +174,7 @@ export class Market {
   public async getUserAccountBalanceAsync(
     marketContractAddress: string,
     userAddress: string
-  ): Promise<BigNumber | null> {
+  ): Promise<BigNumber> {
     return this.marketContractWrapper.getUserAccountBalanceAsync(
       marketContractAddress,
       userAddress

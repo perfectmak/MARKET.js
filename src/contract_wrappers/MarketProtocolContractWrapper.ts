@@ -168,8 +168,6 @@ export class MarketProtocolContractWrapper {
       return Promise.reject(new Error(MarketError.InvalidSignature));
     }
 
-    const collateralPoolContractAddress = await contractSetWrapper.marketContract
-      .MARKET_COLLATERAL_POOL_ADDRESS;
     const isMakerEnabled = await mktTokenContract.isUserEnabledForContract(
       signedOrder.contractAddress,
       maker
@@ -399,8 +397,8 @@ export class MarketProtocolContractWrapper {
     }
 
     // Ensure caller has sufficient collateral token balance
-    const callerCollateralTokenBalance: BigNumber =
-      await this._erc20TokenContractWrapper.getBalanceAsync(contractSetWrapper.collateralToken.address, caller);
+    const callerCollateralTokenBalance: BigNumber = new BigNumber(
+      await this._erc20TokenContractWrapper.getBalanceAsync(contractSetWrapper.collateralToken.address, caller));
 
     if (callerCollateralTokenBalance.isLessThan(depositAmount)) {
       return Promise.reject(new Error(MarketError.InsufficientBalanceForTransfer));

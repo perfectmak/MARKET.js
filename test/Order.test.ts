@@ -6,12 +6,11 @@ import {
   ERC20,
   MarketCollateralPool,
   MarketContract,
-  MARKETProtocolConfig,
   Order,
   SignedOrder
 } from '@marketprotocol/types';
 
-import { Market, Utils } from '../src';
+import { Market, MARKETProtocolConfig, Utils } from '../src';
 import { constants } from '../src/constants';
 
 import {
@@ -61,7 +60,6 @@ describe('Order', () => {
 
       const expirationTimeStamp: BigNumber = new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60);
       const makerAccount = web3.eth.accounts[1];
-      const takerAccount = web3.eth.accounts[2];
 
       const fees: BigNumber = new BigNumber(0);
       const orderQty: BigNumber = new BigNumber(100);
@@ -87,12 +85,10 @@ describe('Order', () => {
     });
 
     it('should throw error if contractAddress is invalid eth address', async () => {
-      const contractAddresses: string[] = await market.marketContractRegistry.getAddressWhiteList;
       const invalidContractAddress = '000000';
 
       const expirationTimeStamp: BigNumber = new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60);
       const makerAccount = web3.eth.accounts[1];
-      const takerAccount = web3.eth.accounts[2];
 
       const fees: BigNumber = new BigNumber(0);
       const orderQty: BigNumber = new BigNumber(100);
@@ -125,7 +121,6 @@ describe('Order', () => {
 
       const expirationTimeStamp: BigNumber = new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60);
       const makerAccount = web3.eth.accounts[1];
-      const takerAccount = web3.eth.accounts[2];
 
       const fees: BigNumber = new BigNumber(0);
       const orderQty: BigNumber = new BigNumber(100);
@@ -311,15 +306,13 @@ describe('Order', () => {
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
 
     await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
+      contractAddress,
       initialCredit,
       { from: maker }
     );
 
     await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
+      contractAddress,
       initialCredit,
       { from: taker }
     );
@@ -386,8 +379,7 @@ describe('Order', () => {
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
 
     await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
+      contractAddress,
       initialCredit,
       { from: maker }
     );
@@ -446,16 +438,14 @@ describe('Order', () => {
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
 
     await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
+      contractAddress,
       initialCredit,
       {
         from: maker
       }
     );
     await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
+      contractAddress,
       initialCredit,
       {
         from: taker
@@ -532,15 +522,13 @@ describe('Order', () => {
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
 
     await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
+      contractAddress,
       initialCredit,
       { from: maker }
     );
 
     await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
+      contractAddress,
       initialCredit,
       { from: taker }
     );

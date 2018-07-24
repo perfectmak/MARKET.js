@@ -154,7 +154,7 @@ export class RemainingFillableCalculator {
 
   private async _getAvailableCollateral(accountAddress: string): Promise<BigNumber> {
     const balance = await this._market.getUserAccountBalanceAsync(
-      this._collateralPoolAddress,
+      this._signedOrder.contractAddress,
       accountAddress
     );
     return balance || new BigNumber(0);

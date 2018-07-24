@@ -4,7 +4,6 @@ import Web3 from 'web3';
 // Types
 import { ERC20, MarketCollateralPool, MarketContractOraclize } from '@marketprotocol/types';
 import BigNumber from 'bignumber.js';
-import { ERC20TokenContractWrapper } from './ERC20TokenContractWrapper';
 import { MarketProtocolContractSetWrapper } from './MarketProtocolContractSetWrapper';
 import { MarketProtocolOraclizeContractSetWrapper } from './MarketProtocolOraclizeContractSetWrapper';
 import { MarketProtocolContractWrapper } from './MarketProtocolContractWrapper';
@@ -55,9 +54,8 @@ export class MarketProtocolOraclizeContractWrapper extends MarketProtocolContrac
    * @returns {Promise<string>}                      The oracle query
    */
   public async getOracleQueryAsync(marketContractAddress: string): Promise<string> {
-    const contractSetWrapper: MarketProtocolOraclizeContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
-      marketContractAddress
-    );
+    const contractSetWrapper: MarketProtocolOraclizeContractSetWrapper =
+      await this._getContractSetByMarketContractAddressAsync(marketContractAddress);
     return contractSetWrapper.marketContractOraclize.ORACLE_QUERY;
   }
 
@@ -67,9 +65,8 @@ export class MarketProtocolOraclizeContractWrapper extends MarketProtocolContrac
    * @returns {Promise<BigNumber>}                   Expiration timestamp
    */
   public async getContractExpirationAsync(marketContractAddress: string): Promise<BigNumber> {
-    const contractSetWrapper: MarketProtocolOraclizeContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
-      marketContractAddress
-    );
+    const contractSetWrapper: MarketProtocolOraclizeContractSetWrapper =
+      await this._getContractSetByMarketContractAddressAsync(marketContractAddress);
     return contractSetWrapper.marketContractOraclize.EXPIRATION;
   }
 
@@ -79,9 +76,8 @@ export class MarketProtocolOraclizeContractWrapper extends MarketProtocolContrac
    * @returns {Promise<boolean>}                     Is this contract settled?
    */
   public async isContractSettledAsync(marketContractAddress: string): Promise<boolean> {
-    const contractSetWrapper: MarketProtocolOraclizeContractSetWrapper = await this._getContractSetByMarketContractAddressAsync(
-      marketContractAddress
-    );
+    const contractSetWrapper: MarketProtocolOraclizeContractSetWrapper =
+      await this._getContractSetByMarketContractAddressAsync(marketContractAddress);
     return contractSetWrapper.marketContractOraclize.isSettled;
   }
 
