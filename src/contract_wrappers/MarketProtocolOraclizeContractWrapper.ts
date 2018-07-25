@@ -130,7 +130,7 @@ export class MarketProtocolOraclizeContractWrapper extends MarketProtocolContrac
       this._web3,
       await marketContract.MARKET_COLLATERAL_POOL_ADDRESS
     );
-    const erc20: ERC20 = await this._erc20TokenContractWrapper.getERC20TokenContractAsync(
+    const erc20: ERC20 = await this.getERC20TokenContractAsync(
       await marketContract.COLLATERAL_TOKEN_ADDRESS
     );
 
