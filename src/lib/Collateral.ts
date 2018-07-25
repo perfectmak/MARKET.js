@@ -1,6 +1,5 @@
 import BigNumber from 'bignumber.js';
 import Web3 from 'web3';
-import * as Decoder from 'ethereum-input-data-decoder';
 
 // Types
 import { Provider, Transaction } from '@0xproject/types';
@@ -12,6 +11,8 @@ import {
 } from '@marketprotocol/types';
 import { MarketError } from '../types';
 import { ERC20TokenContractWrapper } from '../contract_wrappers/ERC20TokenContractWrapper';
+
+const Decoder = require('ethereum-input-data-decoder');
 
 /**
  * deposits collateral to a traders account for a given contract address.
@@ -176,14 +177,14 @@ export interface CollateralEvent {
  * @param {string} fromBlock                        from block #
  * @param {string} toBlock                          to block #
  * @param {string} userAddress                      only search for deposits/withdrawals to/from a specified address
- * @returns {Promise<CollateralEvent[]>} 
+ * @returns {Promise<CollateralEvent[]>}
  */
 export async function getCollateralEventsAsync(
   provider: Provider,
   collateralPoolContractAddress: string,
-  fromBlock: number|string = '0x0',
-  toBlock: number|string = 'latest',
-  userAddress: string|null = null,
+  fromBlock: number | string = '0x0',
+  toBlock: number | string = 'latest',
+  userAddress: string | null = null
 ): Promise<CollateralEvent[]> {
   const web3: Web3 = new Web3();
   web3.setProvider(provider);
@@ -204,11 +205,11 @@ export async function getCollateralEventsAsync(
       web3.eth.getTransaction(e.transactionHash, (err: Error, tx: Transaction) => {
         if (err) {
           reject(err);
-        } 
+        }
         resolve(tx);
       });
     });
-    const decoder = new Decoder.default(collateralPool.contractAbi);
+    const decoder = new Decoder(collateralPool.contractAbi);
     const input = decoder.decodeData(transaction.input);
     const event: CollateralEvent = {
       type: input.name === 'depositTokensForTrading' ? 'deposit' : 'withdrawal',
@@ -220,9 +221,9 @@ export async function getCollateralEventsAsync(
     };
     if (!userAddress) {
       collateralEvents.push(event);
-    } 
-    if ((userAddress === transaction.from) || (userAddress === transaction.to)) {
-        collateralEvents.push(event);
+    }
+    if (userAddress === transaction.from || userAddress === transaction.to) {
+      collateralEvents.push(event);
     }
   }
   return collateralEvents;
