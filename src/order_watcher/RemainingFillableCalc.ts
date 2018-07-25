@@ -84,7 +84,7 @@ export class RemainingFillableCalculator {
     return BigNumber.min(fillableQty, remainingToFill);
   }
 
-  public async computeRemainingTakerFillable(): Promise<BigNumber | null> {
+  public async computeRemainingTakerFillable(): Promise<BigNumber> {
     const makerFillable = await this.computeRemainingMakerFillable();
     const takerAvailableCollateral = await this._getAvailableCollateral(this._signedOrder.taker);
     const hasAvailableFeeFunds: boolean = await this._hasTakerSufficientFundsForFee();
