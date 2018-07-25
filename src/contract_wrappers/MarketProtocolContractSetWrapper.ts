@@ -1,8 +1,8 @@
+import { ERC20, MarketCollateralPool, MarketContract } from '@marketprotocol/types';
+
 /**
  * Wrapper for all contracts that make up a given set of Market Protocol smart contracts
  */
-import { ERC20, MarketCollateralPool, MarketContract } from '@marketprotocol/types';
-
 export class MarketProtocolContractSetWrapper {
   // region Members
   // *****************************************************************
