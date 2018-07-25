@@ -78,7 +78,6 @@ describe('Order', () => {
           fees,
           orderQty,
           price,
-          orderQty,
           Utils.generatePseudoRandomSalt()
         )
       ).rejects.toThrow(Error);
@@ -107,7 +106,6 @@ describe('Order', () => {
           fees,
           orderQty,
           price,
-          orderQty,
           Utils.generatePseudoRandomSalt()
         )
       ).rejects.toThrow(Error);
@@ -138,7 +136,6 @@ describe('Order', () => {
         fees,
         orderQty,
         price,
-        orderQty,
         Utils.generatePseudoRandomSalt()
       );
       const orderHash: string | BigNumber = await createOrderHashAsync(
@@ -187,7 +184,6 @@ describe('Order', () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -305,17 +301,9 @@ describe('Order', () => {
 
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
 
-    await market.depositCollateralAsync(
-      contractAddress,
-      initialCredit,
-      { from: maker }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, { from: maker });
 
-    await market.depositCollateralAsync(
-      contractAddress,
-      initialCredit,
-      { from: taker }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, { from: taker });
 
     const fees: BigNumber = new BigNumber(0);
     const orderQty: BigNumber = new BigNumber(100);
@@ -333,7 +321,6 @@ describe('Order', () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -378,11 +365,7 @@ describe('Order', () => {
     const collateralPoolAddress = await deployedMarketContract.MARKET_COLLATERAL_POOL_ADDRESS;
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
 
-    await market.depositCollateralAsync(
-      contractAddress,
-      initialCredit,
-      { from: maker }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, { from: maker });
 
     const orderQty: BigNumber = new BigNumber(100);
     const order: Order = {
@@ -437,20 +420,12 @@ describe('Order', () => {
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
 
-    await market.depositCollateralAsync(
-      contractAddress,
-      initialCredit,
-      {
-        from: maker
-      }
-    );
-    await market.depositCollateralAsync(
-      contractAddress,
-      initialCredit,
-      {
-        from: taker
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: maker
+    });
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: taker
+    });
 
     const fees: BigNumber = new BigNumber(0);
     const orderQty: BigNumber = new BigNumber(2);
@@ -468,7 +443,6 @@ describe('Order', () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -521,17 +495,9 @@ describe('Order', () => {
 
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
 
-    await market.depositCollateralAsync(
-      contractAddress,
-      initialCredit,
-      { from: maker }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, { from: maker });
 
-    await market.depositCollateralAsync(
-      contractAddress,
-      initialCredit,
-      { from: taker }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, { from: taker });
 
     const fees: BigNumber = new BigNumber(0);
     const orderQty: BigNumber = new BigNumber(100);
@@ -549,7 +515,6 @@ describe('Order', () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
     const orderHash = await createOrderHashAsync(

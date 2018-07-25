@@ -74,7 +74,6 @@ describe('Order filled/cancelled store', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
   });
@@ -84,22 +83,14 @@ describe('Order filled/cancelled store', async () => {
     snapshotId = await createEVMSnapshot(web3);
     await collateralToken.transferTx(maker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
-    await market.depositCollateralAsync(
-      contractAddress,
-      initialCredit,
-      {
-        from: maker
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: maker
+    });
     await collateralToken.transferTx(taker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
-    await market.depositCollateralAsync(
-      contractAddress,
-      initialCredit,
-      {
-        from: taker
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: taker
+    });
   });
 
   afterEach(async () => {

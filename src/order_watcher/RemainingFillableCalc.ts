@@ -3,9 +3,6 @@ import { BigNumber } from 'bignumber.js';
 // Types
 import { MarketError } from '../types';
 import { SignedOrder } from '@marketprotocol/types';
-
-import { Provider } from '@0xproject/types';
-import { ERC20TokenContractWrapper } from '../contract_wrappers/ERC20TokenContractWrapper';
 import { Market } from '../Market';
 
 /**
@@ -23,7 +20,6 @@ export class RemainingFillableCalculator {
   private _signedOrderHash: string;
   private _collateralPoolAddress: string;
   private _collateralTokenAddress: string;
-  private _erc20ContractWrapper: ERC20TokenContractWrapper;
 
   // endregion // members
 
@@ -44,7 +40,6 @@ export class RemainingFillableCalculator {
     this._collateralPoolAddress = collateralPoolAddress;
     this._signedOrder = signedOrder;
     this._signedOrderHash = signedOrderHash;
-    this._erc20ContractWrapper = market.erc20TokenContractWrapper;
   }
   //
   //
@@ -129,7 +124,7 @@ export class RemainingFillableCalculator {
 
   private async _getAvailableFeeFunds(accountAddress: string): Promise<BigNumber> {
     const allowance = new BigNumber(
-      await this._erc20ContractWrapper.getAllowanceAsync(
+      await this._market.marketContractWrapper.getAllowanceAsync(
         this._collateralTokenAddress,
         accountAddress,
         this._signedOrder.feeRecipient
@@ -145,7 +140,7 @@ export class RemainingFillableCalculator {
       return Promise.reject<BigNumber>(new Error(MarketError.InsufficientAllowanceForTransfer));
     }
 
-    const funds = await this._erc20ContractWrapper.getBalanceAsync(
+    const funds = await this._market.marketContractWrapper.getBalanceAsync(
       this._collateralTokenAddress,
       accountAddress
     );

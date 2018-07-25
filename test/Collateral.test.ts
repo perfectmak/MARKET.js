@@ -35,12 +35,12 @@ describe('Collateral', () => {
     collateralPoolAddress = await deployedMarketContract.MARKET_COLLATERAL_POOL_ADDRESS;
     collateralTokenAddress = await deployedMarketContract.COLLATERAL_TOKEN_ADDRESS;
 
-    const tokenBalance: BigNumber = await market.erc20TokenContractWrapper.getBalanceAsync(
+    const tokenBalance: BigNumber = await market.marketContractWrapper.getBalanceAsync(
       collateralTokenAddress,
       maker
     );
 
-    await market.erc20TokenContractWrapper.setAllowanceAsync(
+    await market.marketContractWrapper.setAllowanceAsync(
       collateralTokenAddress,
       collateralPoolAddress,
       tokenBalance,
@@ -49,14 +49,14 @@ describe('Collateral', () => {
   });
 
   it('depositCollateralAsync should fail for deposits above approved amount', async () => {
-    const approvedAmount: BigNumber = await market.erc20TokenContractWrapper.getAllowanceAsync(
+    const approvedAmount: BigNumber = await market.marketContractWrapper.getAllowanceAsync(
       collateralTokenAddress,
       maker,
       collateralPoolAddress
     );
     const depositAmount = approvedAmount.plus(10); // aboue approved amount
 
-    const oldBalance: BigNumber = await market.erc20TokenContractWrapper.getBalanceAsync(
+    const oldBalance: BigNumber = await market.marketContractWrapper.getBalanceAsync(
       collateralTokenAddress,
       collateralPoolAddress
     );
@@ -67,7 +67,7 @@ describe('Collateral', () => {
       })
     ).rejects.toThrow();
 
-    const newBalance: BigNumber = await market.erc20TokenContractWrapper.getBalanceAsync(
+    const newBalance: BigNumber = await market.marketContractWrapper.getBalanceAsync(
       collateralTokenAddress,
       collateralPoolAddress
     );
@@ -77,18 +77,14 @@ describe('Collateral', () => {
 
   it('Balance after depositCollateralAsync call is correct', async () => {
     const depositAmount: BigNumber = new BigNumber(10);
-    const oldBalance: BigNumber = await market.erc20TokenContractWrapper.getBalanceAsync(
+    const oldBalance: BigNumber = await market.marketContractWrapper.getBalanceAsync(
       collateralTokenAddress,
       collateralPoolAddress
     );
 
-    await market.depositCollateralAsync(
-      marketContractAddress,
-      depositAmount,
-      { from: maker }
-    );
+    await market.depositCollateralAsync(marketContractAddress, depositAmount, { from: maker });
 
-    const newBalance: BigNumber = await market.erc20TokenContractWrapper.getBalanceAsync(
+    const newBalance: BigNumber = await market.marketContractWrapper.getBalanceAsync(
       collateralTokenAddress,
       collateralPoolAddress
     );
@@ -103,11 +99,7 @@ describe('Collateral', () => {
     );
 
     const depositAmount: BigNumber = new BigNumber(100);
-    await market.depositCollateralAsync(
-      marketContractAddress,
-      depositAmount,
-      { from: maker }
-    );
+    await market.depositCollateralAsync(marketContractAddress, depositAmount, { from: maker });
     const newUserBalance: BigNumber = await market.getUserAccountBalanceAsync(
       marketContractAddress,
       maker
@@ -118,13 +110,9 @@ describe('Collateral', () => {
   it('withdrawCollateralAsync should withdraw correct amount', async () => {
     const withdrawAmount: BigNumber = new BigNumber(10);
     const depositAmount: BigNumber = new BigNumber(100);
-    await market.depositCollateralAsync(
-      marketContractAddress,
-      depositAmount,
-      { from: maker }
-    );
+    await market.depositCollateralAsync(marketContractAddress, depositAmount, { from: maker });
 
-    const oldBalance: BigNumber = await market.erc20TokenContractWrapper.getBalanceAsync(
+    const oldBalance: BigNumber = await market.marketContractWrapper.getBalanceAsync(
       collateralTokenAddress,
       maker
     );
@@ -132,7 +120,7 @@ describe('Collateral', () => {
     await market.withdrawCollateralAsync(marketContractAddress, withdrawAmount, {
       from: maker
     });
-    const newBalance: BigNumber = await market.erc20TokenContractWrapper.getBalanceAsync(
+    const newBalance: BigNumber = await market.marketContractWrapper.getBalanceAsync(
       collateralTokenAddress,
       maker
     );
@@ -249,11 +237,7 @@ describe('Collateral', () => {
 
     beforeAll(async () => {
       snapshotId = await createEVMSnapshot(web3);
-      await market.depositCollateralAsync(
-        marketContractAddress,
-        depositAmount,
-        { from: maker }
-      );
+      await market.depositCollateralAsync(marketContractAddress, depositAmount, { from: maker });
     });
 
     afterAll(async () => {
@@ -262,65 +246,83 @@ describe('Collateral', () => {
 
     it('returns the deposit', async () => {
       const events = await market.getCollateralEventsAsync(marketContractAddress);
-      const includes: boolean = events.some((e): boolean => {
-        if (
-          depositAmount.isEqualTo(e.amount) &&
-          e.to === collateralPoolAddress &&
-          e.type === 'deposit' &&
-          e.from === maker
-        ) {
-          return true;
+      const includes: boolean = events.some(
+        (e): boolean => {
+          if (
+            depositAmount.isEqualTo(e.amount) &&
+            e.to === collateralPoolAddress &&
+            e.type === 'deposit' &&
+            e.from === maker
+          ) {
+            return true;
+          }
+          return false;
         }
-        return false;
-      });
+      );
       expect(includes).toBe(true);
     });
 
     it('does not returns the deposit if not in the given block range', async () => {
       const events = await market.getCollateralEventsAsync(marketContractAddress, 0, 1);
-      const includes: boolean = events.some((e): boolean => {
-        if (
-          depositAmount.isEqualTo(e.amount) &&
-          e.to === collateralPoolAddress &&
-          e.type === 'deposit' &&
-          e.from === maker
-        ) {
-          return true;
+      const includes: boolean = events.some(
+        (e): boolean => {
+          if (
+            depositAmount.isEqualTo(e.amount) &&
+            e.to === collateralPoolAddress &&
+            e.type === 'deposit' &&
+            e.from === maker
+          ) {
+            return true;
+          }
+          return false;
         }
-        return false;
-      });
+      );
       expect(includes).toBe(false);
     });
 
     it('returns the deposit matching userAddress', async () => {
-      const events = await market.getCollateralEventsAsync(marketContractAddress, 0, 'latest', maker);
-      const includes: boolean = events.some((e): boolean => {
-        if (
-          depositAmount.isEqualTo(e.amount) &&
-          e.to === collateralPoolAddress &&
-          e.type === 'deposit' &&
-          e.from === maker
-        ) {
-          return true;
+      const events = await market.getCollateralEventsAsync(
+        marketContractAddress,
+        0,
+        'latest',
+        maker
+      );
+      const includes: boolean = events.some(
+        (e): boolean => {
+          if (
+            depositAmount.isEqualTo(e.amount) &&
+            e.to === collateralPoolAddress &&
+            e.type === 'deposit' &&
+            e.from === maker
+          ) {
+            return true;
+          }
+          return false;
         }
-        return false;
-      });
+      );
       expect(includes).toBe(true);
     });
 
     it('does not returns the deposit if it does not match userAddress', async () => {
-      const events = await market.getCollateralEventsAsync(marketContractAddress, 0, 'latest', '0x0');
-      const includes: boolean = events.some((e): boolean => {
-        if (
-          depositAmount.isEqualTo(e.amount) &&
-          e.to === collateralPoolAddress &&
-          e.type === 'deposit' &&
-          e.from === maker
-        ) {
-          return true;
+      const events = await market.getCollateralEventsAsync(
+        marketContractAddress,
+        0,
+        'latest',
+        '0x0'
+      );
+      const includes: boolean = events.some(
+        (e): boolean => {
+          if (
+            depositAmount.isEqualTo(e.amount) &&
+            e.to === collateralPoolAddress &&
+            e.type === 'deposit' &&
+            e.from === maker
+          ) {
+            return true;
+          }
+          return false;
         }
-        return false;
-      });
+      );
       expect(includes).toBe(false);
     });
 
@@ -329,17 +331,19 @@ describe('Collateral', () => {
         from: maker
       });
       const events = await market.getCollateralEventsAsync(marketContractAddress);
-      const includes: boolean = events.some((e): boolean => {
-        if (
-          depositAmount.isEqualTo(e.amount) &&
-          e.to === maker &&
-          e.type === 'withdrawal' &&
-          e.from === collateralPoolAddress
-        ) {
-          return true;
+      const includes: boolean = events.some(
+        (e): boolean => {
+          if (
+            depositAmount.isEqualTo(e.amount) &&
+            e.to === maker &&
+            e.type === 'withdrawal' &&
+            e.from === collateralPoolAddress
+          ) {
+            return true;
+          }
+          return false;
         }
-        return false;
-      });
+      );
       expect(includes).toBe(true);
     });
   });

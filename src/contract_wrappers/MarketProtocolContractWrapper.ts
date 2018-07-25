@@ -8,12 +8,10 @@ import {
   ITxParams,
   MarketCollateralPool,
   MarketContract,
-  MarketToken,
   Order,
   SignedOrder
 } from '@marketprotocol/types';
 import { MarketError } from '../types';
-import { ERC20TokenContractWrapper } from './ERC20TokenContractWrapper';
 import { Utils } from '../lib/Utils';
 import { constants } from '../constants';
 import { createOrderHashAsync, isValidSignatureAsync } from '../lib/Order';
@@ -34,8 +32,8 @@ export interface CollateralEvent {
 }
 
 /**
- * Wrapper for our MarketContract objects.  This wrapper exposes all needed functionality of the
- * MarketContract itself and stores the created MarketContract objects in a mapping for easy reuse.
+ * Wrapper for all of our Contract objects.  This wrapper exposes all needed functionality of the
+ * contracts and stores the created objects in a mapping for easy reuse.
  */
 export class MarketProtocolContractWrapper {
   // region Members
@@ -52,9 +50,11 @@ export class MarketProtocolContractWrapper {
     [address: string]: MarketProtocolContractSetWrapper;
   };
 
-  protected readonly _erc20TokenContractWrapper: ERC20TokenContractWrapper;
-  protected readonly _market: Market;
+  protected readonly _tokenContractsByAddress: {
+    [address: string]: ERC20;
+  };
 
+  protected readonly _market: Market;
   // endregion // members
   // region Constructors
   // *****************************************************************
@@ -64,9 +64,9 @@ export class MarketProtocolContractWrapper {
   constructor(web3: Web3, market: Market) {
     this._web3 = web3;
     this._market = market;
-    this._erc20TokenContractWrapper = market.erc20TokenContractWrapper;
     this._marketProtocolSetByMarketContractAddress = {};
     this._marketProtocolSetByMarketCollateralPoolAddress = {};
+    this._tokenContractsByAddress = {};
   }
   // endregion//Constructors
 
@@ -105,7 +105,6 @@ export class MarketProtocolContractWrapper {
 
   /**
    * Trades an order and returns success or error.
-   * @param {MarketToken} mktTokenContract
    * @param {string} orderLibAddress          Address of the deployed OrderLib.
    * @param   signedOrder                     An object that conforms to the SignedOrder interface. The
    *                                          signedOrder you wish to validate.
@@ -114,7 +113,6 @@ export class MarketProtocolContractWrapper {
    * @returns {Promise<OrderTransactionInfo>} Information about this order transaction.
    */
   public async tradeOrderAsync(
-    mktTokenContract: MarketToken,
     orderLibAddress: string,
     signedOrder: SignedOrder,
     fillQty: BigNumber,
@@ -168,11 +166,11 @@ export class MarketProtocolContractWrapper {
       return Promise.reject(new Error(MarketError.InvalidSignature));
     }
 
-    const isMakerEnabled = await mktTokenContract.isUserEnabledForContract(
+    const isMakerEnabled = await this._market.mktTokenContract.isUserEnabledForContract(
       signedOrder.contractAddress,
       maker
     );
-    const isTakerEnabled = await mktTokenContract.isUserEnabledForContract(
+    const isTakerEnabled = await this._market.mktTokenContract.isUserEnabledForContract(
       signedOrder.contractAddress,
       taker
     );
@@ -181,12 +179,8 @@ export class MarketProtocolContractWrapper {
       return Promise.reject(new Error(MarketError.UserNotEnabledForContract));
     }
 
-    const erc20ContractWrapper: ERC20TokenContractWrapper = new ERC20TokenContractWrapper(
-      this._web3
-    );
-
     const makerMktBalance: BigNumber = new BigNumber(
-      await erc20ContractWrapper.getBalanceAsync(mktTokenContract.address, maker)
+      await this.getBalanceAsync(this._market.mktTokenContract.address, maker)
     );
 
     if (makerMktBalance.isLessThan(signedOrder.makerFee)) {
@@ -194,8 +188,8 @@ export class MarketProtocolContractWrapper {
     }
 
     const makersMktAllowance = new BigNumber(
-      await erc20ContractWrapper.getAllowanceAsync(
-        mktTokenContract.address,
+      await this.getAllowanceAsync(
+        this._market.mktTokenContract.address,
         maker,
         signedOrder.feeRecipient
       )
@@ -206,7 +200,7 @@ export class MarketProtocolContractWrapper {
     }
 
     const takerMktBalance: BigNumber = new BigNumber(
-      await erc20ContractWrapper.getBalanceAsync(mktTokenContract.address, taker)
+      await this.getBalanceAsync(this._market.mktTokenContract.address, taker)
     );
 
     if (takerMktBalance.isLessThan(signedOrder.takerFee)) {
@@ -214,8 +208,8 @@ export class MarketProtocolContractWrapper {
     }
 
     const takersMktAllowance = new BigNumber(
-      await erc20ContractWrapper.getAllowanceAsync(
-        mktTokenContract.address,
+      await this.getAllowanceAsync(
+        this._market.mktTokenContract.address,
         taker,
         signedOrder.feeRecipient
       )
@@ -320,6 +314,12 @@ export class MarketProtocolContractWrapper {
     );
     return contractSetWrapper.marketContract.PRICE_DECIMAL_PLACES;
   }
+  // endregion //Public Methods
+
+  // region Public Collateral Methods
+  // *****************************************************************
+  // ****               Public Collateral Methods                 ****
+  // *****************************************************************
 
   /**
    * Gets the contract name
@@ -391,10 +391,7 @@ export class MarketProtocolContractWrapper {
 
     // Ensure caller has sufficient collateral token balance
     const callerCollateralTokenBalance: BigNumber = new BigNumber(
-      await this._erc20TokenContractWrapper.getBalanceAsync(
-        contractSetWrapper.collateralToken.address,
-        caller
-      )
+      await this.getBalanceAsync(contractSetWrapper.collateralToken.address, caller)
     );
 
     if (callerCollateralTokenBalance.isLessThan(depositAmount)) {
@@ -403,7 +400,7 @@ export class MarketProtocolContractWrapper {
 
     // Ensure caller has approved sufficient amount
     const callerAllowance: BigNumber = new BigNumber(
-      await this._erc20TokenContractWrapper.getAllowanceAsync(
+      await this.getAllowanceAsync(
         contractSetWrapper.collateralToken.address,
         caller,
         contractSetWrapper.marketCollateralPool.address
@@ -529,7 +526,94 @@ export class MarketProtocolContractWrapper {
     }
     return collateralEvents;
   }
-  // endregion //Public Methods
+
+  // endregion //Public Collateral Methods
+
+  // region Public ERC20 Methods
+  // *****************************************************************
+  // ****                 Public ERC20 Methods                    ****
+  // *****************************************************************
+  /**
+   * Allow for retrieval or creation of a given ERC20 Token
+   * @param {string} tokenAddress         address of ERC20
+   * @returns {Promise<MarketContract>}   ERC20 object
+   */
+  public async getERC20TokenContractAsync(tokenAddress: string): Promise<ERC20> {
+    const normalizedTokenAddress = tokenAddress.toLowerCase();
+    let tokenContract = this._tokenContractsByAddress[normalizedTokenAddress];
+    if (!_.isUndefined(tokenContract)) {
+      return tokenContract;
+    }
+
+    tokenContract = new ERC20(this._web3, tokenAddress);
+    this._tokenContractsByAddress[normalizedTokenAddress] = tokenContract;
+    return tokenContract;
+  }
+
+  /**
+   * Retrieves an owner's ERC20 token balance.
+   * @param {string} tokenAddress   The hex encoded contract Ethereum address where the ERC20 token is deployed.
+   * @param {string} ownerAddress   The hex encoded user Ethereum address whose balance you would like to check.
+   * @return {Promise<BigNumber>}   The owner's ERC20 token balance in base units.
+   */
+  public async getBalanceAsync(tokenAddress: string, ownerAddress: string): Promise<BigNumber> {
+    assert.isETHAddressHex('ownerAddress', ownerAddress);
+    assert.isETHAddressHex('tokenAddress', tokenAddress);
+    const normalizedTokenAddress = tokenAddress.toLowerCase();
+
+    const tokenContract: ERC20 = await this.getERC20TokenContractAsync(normalizedTokenAddress);
+    return tokenContract.balanceOf(ownerAddress);
+  }
+
+  /**
+   * Sets the spender's allowance to a specified number of baseUnits on behalf of the owner address.
+   * Equivalent to the ERC20 spec method `approve`.
+   * @param {string} tokenAddress           The hex encoded contract Ethereum address where the ERC20 token is deployed.
+   * @param {string} spenderAddress         The hex encoded user Ethereum address who will be able
+   *                                        to spend the set allowance.
+   * @param {BigNumber} amountInBaseUnits   The allowance amount you would like to set.
+   * @param {ITxParams} txParams            Transaction parameters.
+   * @return {Promise<string>}              Transaction hash.
+   */
+  public async setAllowanceAsync(
+    tokenAddress: string,
+    spenderAddress: string,
+    amountInBaseUnits: BigNumber,
+    txParams: ITxParams = {}
+  ): Promise<string> {
+    assert.isETHAddressHex('spenderAddress', spenderAddress);
+    assert.isETHAddressHex('tokenAddress', tokenAddress);
+    await assert.isSenderAddressAsync('txParams.from', txParams.from || '', this._web3);
+    assert.isValidBaseUnitAmount('amountInBaseUnits', amountInBaseUnits);
+
+    const tokenContract = await this.getERC20TokenContractAsync(tokenAddress);
+    return tokenContract.approveTx(spenderAddress, amountInBaseUnits).send(txParams);
+  }
+
+  /**
+   * Retrieves the owners allowance in baseUnits set to the spender's address.
+   * @param {string} tokenAddress     The hex encoded contract Ethereum address where the ERC20 token is deployed.
+   * @param {string} ownerAddress     The hex encoded user Ethereum address whose allowance to spenderAddress
+   *                                  you would like to retrieve.
+   * @param {string} spenderAddress   The hex encoded user Ethereum address who can spend the allowance
+   *                                  you are fetching.
+   * @return {Promise<BigNumber>}
+   */
+  public async getAllowanceAsync(
+    tokenAddress: string,
+    ownerAddress: string,
+    spenderAddress: string
+  ): Promise<BigNumber> {
+    assert.isETHAddressHex('ownerAddress', ownerAddress);
+    assert.isETHAddressHex('tokenAddress', tokenAddress);
+    assert.isETHAddressHex('spenderAddress', spenderAddress);
+    await assert.isSenderAddressAsync('ownerAddress', ownerAddress, this._web3);
+
+    const tokenContract = await this.getERC20TokenContractAsync(tokenAddress);
+    return tokenContract.allowance(ownerAddress, spenderAddress);
+  }
+
+  // endregion //Public ERC20 Methods
 
   // region Protected Methods
   // *****************************************************************
@@ -575,7 +659,7 @@ export class MarketProtocolContractWrapper {
       this._web3,
       await marketContract.MARKET_COLLATERAL_POOL_ADDRESS
     );
-    const erc20: ERC20 = await this._erc20TokenContractWrapper.getERC20TokenContractAsync(
+    const erc20: ERC20 = await this.getERC20TokenContractAsync(
       await marketContract.COLLATERAL_TOKEN_ADDRESS
     );
 

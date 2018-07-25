@@ -229,7 +229,7 @@ describe('Remaining Fillable Calculator', async () => {
       price
     );
 
-    await market.erc20TokenContractWrapper.setAllowanceAsync(
+    await market.marketContractWrapper.setAllowanceAsync(
       collateralTokenAddress,
       deploymentAddress,
       neededCollateral.plus(makerFee),
@@ -284,7 +284,7 @@ describe('Remaining Fillable Calculator', async () => {
       price
     );
 
-    await market.erc20TokenContractWrapper.setAllowanceAsync(
+    await market.marketContractWrapper.setAllowanceAsync(
       collateralTokenAddress,
       deploymentAddress,
       neededCollateral.plus(takerFee),

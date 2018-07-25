@@ -15,9 +15,7 @@ import {
   SignedOrder
 } from '@marketprotocol/types';
 import { MARKETProtocolConfig } from './types';
-
 import { assert } from './assert';
-import { ERC20TokenContractWrapper } from './contract_wrappers/ERC20TokenContractWrapper';
 
 import {
   deployMarketCollateralPoolAsync,
@@ -53,7 +51,6 @@ export class Market {
 
   // wrappers
   public marketContractWrapper: MarketProtocolOraclizeContractWrapper;
-  public erc20TokenContractWrapper: ERC20TokenContractWrapper;
 
   // Config
   public readonly config: MARKETProtocolConfig;
@@ -115,7 +112,6 @@ export class Market {
     this.orderLib = new OrderLib(this._web3, config.orderLibAddress);
     /* tslint:enable */
 
-    this.erc20TokenContractWrapper = new ERC20TokenContractWrapper(this._web3);
     this.marketContractWrapper = new MarketProtocolOraclizeContractWrapper(this._web3, this);
   }
   // endregion//Constructors
@@ -462,7 +458,6 @@ export class Market {
     txParams: ITxParams = {}
   ): Promise<OrderTransactionInfo> {
     return this.marketContractWrapper.tradeOrderAsync(
-      this.mktTokenContract,
       this.orderLib.address,
       signedOrder,
       fillQty,
