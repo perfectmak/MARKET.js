@@ -94,7 +94,6 @@ describe('Remaining Fillable Calculator', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -207,7 +206,6 @@ describe('Remaining Fillable Calculator', async () => {
       takerFee,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -263,7 +261,6 @@ describe('Remaining Fillable Calculator', async () => {
       takerFee,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -321,7 +318,6 @@ describe('Remaining Fillable Calculator', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 

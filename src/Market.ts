@@ -414,7 +414,6 @@ export class Market {
    * @param {BigNumber} takerFee              fee amount for taker to pay
    * @param {BigNumber} orderQty              qty of Order
    * @param {BigNumber} price                 price of Order
-   * @param {BigNumber} remainingQty          qty remaining
    * @param {BigNumber} salt                  used to ensure unique order hashes
    * @return {Promise<SignedOrder>}
    */
@@ -429,7 +428,6 @@ export class Market {
     takerFee: BigNumber,
     orderQty: BigNumber,
     price: BigNumber,
-    remainingQty: BigNumber,
     salt: BigNumber
   ): Promise<SignedOrder> {
     return createSignedOrderAsync(
@@ -444,7 +442,6 @@ export class Market {
       takerFee,
       orderQty,
       price,
-      remainingQty,
       salt
     );
   }
