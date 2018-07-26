@@ -1,9 +1,9 @@
 import Web3 from 'web3';
 import BigNumber from 'bignumber.js';
 
-import { ERC20, MarketContract, MARKETProtocolConfig, SignedOrder } from '@marketprotocol/types';
+import { ERC20, MarketContract, SignedOrder } from '@marketprotocol/types';
 
-import { MarketError } from '../src/types';
+import { MarketError, MARKETProtocolConfig } from '../src/types';
 import { Market, Utils } from '../src';
 import { constants } from '../src/constants';
 
@@ -13,7 +13,7 @@ import { createEVMSnapshot, getContractAddress, restoreEVMSnapshot } from './uti
 import { RemainingFillableCalculator } from '../src/order_watcher/RemainingFillableCalc';
 
 describe('Remaining Fillable Calculator', async () => {
-  let web3;
+  let web3: Web3;
   let config: MARKETProtocolConfig;
   let market: Market;
   let orderLibAddress: string;
@@ -25,7 +25,7 @@ describe('Remaining Fillable Calculator', async () => {
   let deployedMarketContract: MarketContract;
   let collateralTokenAddress: string;
   let collateralToken: ERC20;
-  let collateralPoolAddress;
+  let collateralPoolAddress: string;
   let initialCredit: BigNumber;
   let fees: BigNumber;
   let orderQty: BigNumber;
@@ -59,27 +59,17 @@ describe('Remaining Fillable Calculator', async () => {
     await collateralToken
       .approveTx(collateralPoolAddress, initialCredit)
       .send({ from: makerAddress });
-    await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
-      initialCredit,
-      {
-        from: makerAddress
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: makerAddress
+    });
 
     await collateralToken.transferTx(takerAddress, initialCredit).send({ from: deploymentAddress });
     await collateralToken
       .approveTx(collateralPoolAddress, initialCredit)
       .send({ from: takerAddress });
-    await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
-      initialCredit,
-      {
-        from: takerAddress
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: takerAddress
+    });
   });
 
   afterEach(async () => {
@@ -104,7 +94,6 @@ describe('Remaining Fillable Calculator', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -128,23 +117,15 @@ describe('Remaining Fillable Calculator', async () => {
       price
     );
 
-    makerFillable = await calc.computeRemainingMakerFillable();
-    takerFillable = await calc.computeRemainingTakerFillable();
-
     await collateralToken
       .transferTx(takerAddress, neededCollateral)
       .send({ from: deploymentAddress });
     await collateralToken
       .approveTx(collateralPoolAddress, neededCollateral)
       .send({ from: takerAddress });
-    await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
-      neededCollateral,
-      {
-        from: takerAddress
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, neededCollateral, {
+      from: takerAddress
+    });
 
     expect(
       await market.getQtyFilledOrCancelledFromOrderAsync(contractAddress, orderHash.toString())
@@ -160,9 +141,6 @@ describe('Remaining Fillable Calculator', async () => {
       await market.getQtyFilledOrCancelledFromOrderAsync(contractAddress, orderHash.toString())
     ).toEqual(new BigNumber(fillQty));
 
-    makerFillable = await calc.computeRemainingMakerFillable();
-    takerFillable = await calc.computeRemainingTakerFillable();
-
     // maker deposits more collateral to allow fill the order
     await collateralToken
       .transferTx(makerAddress, neededCollateral)
@@ -170,14 +148,9 @@ describe('Remaining Fillable Calculator', async () => {
     await collateralToken
       .approveTx(collateralPoolAddress, neededCollateral)
       .send({ from: makerAddress });
-    await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
-      new BigNumber(6e22),
-      {
-        from: makerAddress
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, new BigNumber(6e22), {
+      from: makerAddress
+    });
 
     takerFillable = await calc.computeRemainingTakerFillable();
 
@@ -233,7 +206,6 @@ describe('Remaining Fillable Calculator', async () => {
       takerFee,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -257,7 +229,7 @@ describe('Remaining Fillable Calculator', async () => {
       price
     );
 
-    await market.erc20TokenContractWrapper.setAllowanceAsync(
+    await market.marketContractWrapper.setAllowanceAsync(
       collateralTokenAddress,
       deploymentAddress,
       neededCollateral.plus(makerFee),
@@ -289,7 +261,6 @@ describe('Remaining Fillable Calculator', async () => {
       takerFee,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -313,7 +284,7 @@ describe('Remaining Fillable Calculator', async () => {
       price
     );
 
-    await market.erc20TokenContractWrapper.setAllowanceAsync(
+    await market.marketContractWrapper.setAllowanceAsync(
       collateralTokenAddress,
       deploymentAddress,
       neededCollateral.plus(takerFee),
@@ -347,7 +318,6 @@ describe('Remaining Fillable Calculator', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -363,12 +333,6 @@ describe('Remaining Fillable Calculator', async () => {
       collateralTokenAddress,
       signedOrder,
       orderHash
-    );
-
-    let neededCollateral = await market.calculateNeededCollateralAsync(
-      contractAddress,
-      orderQty,
-      price
     );
 
     makerFillable = await calc.computeRemainingMakerFillable();

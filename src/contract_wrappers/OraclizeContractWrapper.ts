@@ -2,29 +2,39 @@ import * as _ from 'lodash';
 import Web3 from 'web3';
 
 // Types
-import { MarketContractOraclize } from '@marketprotocol/types';
-import { MarketContractWrapper } from './MarketContractWrapper';
+import { ERC20, MarketCollateralPool, MarketContractOraclize } from '@marketprotocol/types';
 import BigNumber from 'bignumber.js';
+import { ContractSet } from './ContractSet';
+import { OraclizeContractSet } from './OraclizeContractSet';
+import { ContractWrapper } from './ContractWrapper';
+import { Market } from '../Market';
 
 /**
  * Wrapper for our MarketContractOraclize objects.  This wrapper exposes all needed functionality of the
  * MarketContractOraclize itself and stores the created MarketContractOraclize objects in a mapping for easy reuse.
  */
-export class MarketContractOraclizeWrapper extends MarketContractWrapper {
+export class OraclizeContractWrapper extends ContractWrapper {
   // region Members
   // *****************************************************************
   // ****                     Members                             ****
   // *****************************************************************
-  private readonly _marketContractByAddress: { [address: string]: MarketContractOraclize };
+  protected readonly _marketProtocolSetByMarketContractAddress: {
+    [address: string]: OraclizeContractSet;
+  };
+
+  protected readonly _marketProtocolSetByMarketCollateralPoolAddress: {
+    [address: string]: OraclizeContractSet;
+  };
   // endregion // members
 
   // region Constructors
   // *****************************************************************
   // ****                     Constructors                        ****
   // *****************************************************************
-  constructor(web3: Web3) {
-    super(web3);
-    this._marketContractByAddress = {};
+  constructor(web3: Web3, market: Market) {
+    super(web3, market);
+    this._marketProtocolSetByMarketContractAddress = {};
+    this._marketProtocolSetByMarketCollateralPoolAddress = {};
   }
   // endregion//Constructors
 
@@ -44,10 +54,10 @@ export class MarketContractOraclizeWrapper extends MarketContractWrapper {
    * @returns {Promise<string>}                      The oracle query
    */
   public async getOracleQueryAsync(marketContractAddress: string): Promise<string> {
-    const marketContractOraclize: MarketContractOraclize = await this._getMarketContractAsync(
+    const contractSetWrapper: OraclizeContractSet = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
     );
-    return marketContractOraclize.ORACLE_QUERY;
+    return contractSetWrapper.marketContractOraclize.ORACLE_QUERY;
   }
 
   /**
@@ -56,10 +66,10 @@ export class MarketContractOraclizeWrapper extends MarketContractWrapper {
    * @returns {Promise<BigNumber>}                   Expiration timestamp
    */
   public async getContractExpirationAsync(marketContractAddress: string): Promise<BigNumber> {
-    const marketContractOraclize: MarketContractOraclize = await this._getMarketContractAsync(
+    const contractSetWrapper: OraclizeContractSet = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
     );
-    return marketContractOraclize.EXPIRATION;
+    return contractSetWrapper.marketContractOraclize.EXPIRATION;
   }
 
   /**
@@ -68,10 +78,10 @@ export class MarketContractOraclizeWrapper extends MarketContractWrapper {
    * @returns {Promise<boolean>}                     Is this contract settled?
    */
   public async isContractSettledAsync(marketContractAddress: string): Promise<boolean> {
-    const marketContractOraclize: MarketContractOraclize = await this._getMarketContractAsync(
+    const contractSetWrapper: OraclizeContractSet = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
     );
-    return marketContractOraclize.isSettled;
+    return contractSetWrapper.marketContractOraclize.isSettled;
   }
 
   // endregion //Public Methods
@@ -81,22 +91,54 @@ export class MarketContractOraclizeWrapper extends MarketContractWrapper {
   // ****                    Protected Methods                    ****
   // *****************************************************************
   /**
-   * Allow for retrieval or creation of a given MarketContractOraclize
-   * @param {string} marketContractAddress    Address of MarketContractOraclize
-   * @returns {Promise<MarketContractOraclize>}       MarketContractOraclize object
+   * Allow for retrieval or creation of a given ContractWrapperSet
+   * @param {string} marketContractAddress                address of MarketContract
+   * @returns {Promise<ContractSet>} ContractWrapperSet object
    * @private
    */
-  protected async _getMarketContractAsync(
+  protected async _getContractSetByMarketContractAddressAsync(
     marketContractAddress: string
-  ): Promise<MarketContractOraclize> {
+  ): Promise<OraclizeContractSet> {
     const normalizedMarketAddress = marketContractAddress.toLowerCase();
-    let marketContractOraclize = this._marketContractByAddress[normalizedMarketAddress];
-    if (!_.isUndefined(marketContractOraclize)) {
-      return marketContractOraclize;
+    let contractSetWrapper: OraclizeContractSet = this._marketProtocolSetByMarketContractAddress[
+      normalizedMarketAddress
+    ];
+
+    if (!_.isUndefined(contractSetWrapper)) {
+      return contractSetWrapper;
     }
-    marketContractOraclize = new MarketContractOraclize(this._web3, marketContractAddress);
-    this._marketContractByAddress[normalizedMarketAddress] = marketContractOraclize;
-    return marketContractOraclize;
+
+    contractSetWrapper = await this.createNewMarketContractSetFromMarketContractAddressAsync(
+      marketContractAddress
+    );
+    this._marketProtocolSetByMarketContractAddress[normalizedMarketAddress] = contractSetWrapper;
+    this._marketProtocolSetByMarketCollateralPoolAddress[
+      contractSetWrapper.marketCollateralPool.address
+    ] = contractSetWrapper;
+    return contractSetWrapper;
+  }
+
+  /**
+   * Creates a new contract set from a MarketContract address
+   * @param {string} marketContractAddress
+   * @returns {Promise<ContractSet>}
+   */
+  protected async createNewMarketContractSetFromMarketContractAddressAsync(
+    marketContractAddress: string
+  ): Promise<OraclizeContractSet> {
+    const marketContract: MarketContractOraclize = new MarketContractOraclize(
+      this._web3,
+      marketContractAddress
+    );
+    const marketCollateralPool: MarketCollateralPool = new MarketCollateralPool(
+      this._web3,
+      await marketContract.MARKET_COLLATERAL_POOL_ADDRESS
+    );
+    const erc20: ERC20 = await this.getERC20TokenContractAsync(
+      await marketContract.COLLATERAL_TOKEN_ADDRESS
+    );
+
+    return new OraclizeContractSet(marketContract, marketCollateralPool, erc20);
   }
   // endregion //Protected Methods
 

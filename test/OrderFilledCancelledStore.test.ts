@@ -55,12 +55,12 @@ describe('Order filled/cancelled store', async () => {
     orderQty = new BigNumber(100);
     price = new BigNumber(100000);
     fees = new BigNumber(0);
-    let makerCollateral = await market.getUserAccountBalanceAsync(collateralPoolAddress, maker);
-    let takerCollateral = await market.getUserAccountBalanceAsync(collateralPoolAddress, taker);
-    await market.withdrawCollateralAsync(collateralPoolAddress, makerCollateral, {
+    let makerCollateral = await market.getUserAccountBalanceAsync(contractAddress, maker);
+    let takerCollateral = await market.getUserAccountBalanceAsync(contractAddress, taker);
+    await market.withdrawCollateralAsync(contractAddress, makerCollateral, {
       from: maker
     });
-    await market.withdrawCollateralAsync(collateralPoolAddress, takerCollateral, {
+    await market.withdrawCollateralAsync(contractAddress, takerCollateral, {
       from: taker
     });
     signedOrder = await market.createSignedOrderAsync(
@@ -74,7 +74,6 @@ describe('Order filled/cancelled store', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
   });
@@ -84,24 +83,14 @@ describe('Order filled/cancelled store', async () => {
     snapshotId = await createEVMSnapshot(web3);
     await collateralToken.transferTx(maker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
-    await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
-      initialCredit,
-      {
-        from: maker
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: maker
+    });
     await collateralToken.transferTx(taker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
-    await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
-      initialCredit,
-      {
-        from: taker
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: taker
+    });
   });
 
   afterEach(async () => {

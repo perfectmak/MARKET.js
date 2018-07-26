@@ -4,9 +4,7 @@ import Web3 from 'web3';
 import DoneCallback = jest.DoneCallback;
 
 // Types
-import { MARKETProtocolConfig } from '@marketprotocol/types';
-
-import { Market, Utils } from '../src';
+import { Market, MARKETProtocolConfig, Utils } from '../src';
 import { constants } from '../src/constants';
 import { getContractAddress } from './utils';
 import { ExpirationWatcher } from '../src/order_watcher/ExpirationWatcher';
@@ -60,7 +58,6 @@ describe('ExpirationWatcher', () => {
         fees,
         new BigNumber(100),
         new BigNumber(5000),
-        new BigNumber(100),
         Utils.generatePseudoRandomSalt()
       );
       const orderHash = await market.createOrderHashAsync(orderLibAddress, signedOrder);
@@ -94,7 +91,6 @@ describe('ExpirationWatcher', () => {
         fees,
         new BigNumber(100),
         new BigNumber(5000),
-        new BigNumber(100),
         Utils.generatePseudoRandomSalt()
       );
       const orderHash = await market.createOrderHashAsync(orderLibAddress, signedOrder);
@@ -129,7 +125,6 @@ describe('ExpirationWatcher', () => {
         fees,
         new BigNumber(100),
         new BigNumber(5000),
-        new BigNumber(100),
         Utils.generatePseudoRandomSalt()
       );
 
@@ -144,7 +139,6 @@ describe('ExpirationWatcher', () => {
         fees,
         new BigNumber(100),
         new BigNumber(5000),
-        new BigNumber(100),
         Utils.generatePseudoRandomSalt()
       );
 

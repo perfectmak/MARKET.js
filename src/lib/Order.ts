@@ -59,7 +59,6 @@ export async function createOrderHashAsync(
  * @param {BigNumber} takerFee              fee amount for taker to pay
  * @param {BigNumber} orderQty              qty of Order
  * @param {BigNumber} price                 price of Order
- * @param {BigNumber} remainingQty          qty remaining
  * @param {BigNumber} salt                  used to ensure unique order hashes
  * @return {Promise<SignedOrder>}
  */
@@ -75,7 +74,6 @@ export async function createSignedOrderAsync(
   takerFee: BigNumber,
   orderQty: BigNumber,
   price: BigNumber,
-  remainingQty: BigNumber,
   salt: BigNumber
 ): Promise<SignedOrder> {
   assert.isETHAddressHex('orderLibAddress', orderLibAddress);
@@ -89,7 +87,7 @@ export async function createSignedOrderAsync(
     makerFee: makerFee,
     orderQty: orderQty,
     price: price,
-    remainingQty: remainingQty,
+    remainingQty: orderQty, // at creation time, remainingQty == orderQty (no fills, no cancels)
     salt: salt,
     taker: taker,
     takerFee: takerFee

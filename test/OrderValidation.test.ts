@@ -7,8 +7,6 @@ import { MarketError, MARKETProtocolConfig } from '../src/types';
 import { Market, Utils } from '../src';
 import { constants } from '../src/constants';
 
-import { getUserAccountBalanceAsync } from '../src/lib/Collateral';
-
 import { createSignedOrderAsync } from '../src/lib/Order';
 
 import { createEVMSnapshot, getContractAddress, restoreEVMSnapshot } from './utils';
@@ -53,20 +51,12 @@ describe('Order Validation', async () => {
     initialCredit = new BigNumber(1e23);
     orderQty = new BigNumber(100);
     price = new BigNumber(100000);
-    let makerCollateral = await getUserAccountBalanceAsync(
-      web3.currentProvider,
-      collateralPoolAddress,
-      maker
-    );
-    let takerCollateral = await getUserAccountBalanceAsync(
-      web3.currentProvider,
-      collateralPoolAddress,
-      taker
-    );
-    await market.withdrawCollateralAsync(collateralPoolAddress, makerCollateral, {
+    let makerCollateral = await market.getUserAccountBalanceAsync(contractAddress, maker);
+    let takerCollateral = await market.getUserAccountBalanceAsync(contractAddress, taker);
+    await market.withdrawCollateralAsync(contractAddress, makerCollateral, {
       from: maker
     });
-    await market.withdrawCollateralAsync(collateralPoolAddress, takerCollateral, {
+    await market.withdrawCollateralAsync(contractAddress, takerCollateral, {
       from: taker
     });
   });
@@ -76,14 +66,9 @@ describe('Order Validation', async () => {
     // Transfer initial credit amount of tokens to maker and deposit as collateral
     await collateralToken.transferTx(maker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
-    await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
-      initialCredit,
-      {
-        from: maker
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: maker
+    });
   });
 
   afterEach(async () => {
@@ -109,7 +94,6 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -144,7 +128,6 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -158,7 +141,7 @@ describe('Order Validation', async () => {
 
   it('Checks sufficient collateral balances', async () => {
     // Withdraw maker's collateral so that balance is not enough to trade
-    await market.withdrawCollateralAsync(collateralPoolAddress, initialCredit, {
+    await market.withdrawCollateralAsync(contractAddress, initialCredit, {
       from: maker
     });
     fees = new BigNumber(0);
@@ -174,7 +157,6 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -203,7 +185,6 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -232,7 +213,6 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
     signedOrder.ecSignature.s = '0x';
@@ -252,14 +232,9 @@ describe('Order Validation', async () => {
     fees = new BigNumber(0);
     await collateralToken.transferTx(taker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
-    await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
-      initialCredit,
-      {
-        from: taker
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: taker
+    });
     const signedOrder: SignedOrder = await createSignedOrderAsync(
       web3.currentProvider,
       orderLibAddress,
@@ -272,7 +247,6 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -301,7 +275,6 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
@@ -330,7 +303,6 @@ describe('Order Validation', async () => {
       fees,
       new BigNumber(0),
       price,
-      new BigNumber(0),
       Utils.generatePseudoRandomSalt()
     );
 
@@ -359,7 +331,6 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt()
     );
 
