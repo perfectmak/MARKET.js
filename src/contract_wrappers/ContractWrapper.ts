@@ -9,6 +9,7 @@ import {
   MarketCollateralPool,
   MarketContract,
   Order,
+  OrderLib,
   SignedOrder
 } from '@marketprotocol/types';
 import { MarketError } from '../types';
@@ -98,21 +99,20 @@ export class ContractWrapper {
   }
 
   /**
-   * Trades an order and returns success or error.
-   * @param {string} orderLibAddress          Address of the deployed OrderLib.
-   * @param   signedOrder                     An object that conforms to the SignedOrder interface. The
-   *                                          signedOrder you wish to validate.
-   * @param   fillQty                         The amount of the order that you wish to fill.
-   * @param   txParams                        Transaction params of web3.
-   * @returns {Promise<OrderTransactionInfo>} Information about this order transaction.
+   * Trades an order
+   * @param {OrderLib} orderLib
+   * @param {SignedOrder} signedOrder         An object that conforms to the SignedOrder interface.
+   *                                          The signedOrder you wish to validate.
+   * @param {BigNumber} fillQty               The amount of the order that you wish to fill.
+   * @param {ITxParams} txParams              Transaction params of web3.
+   * @return {Promise<OrderTransactionInfo>}  Information about this order transaction.
    */
   public async tradeOrderAsync(
-    orderLibAddress: string,
+    orderLib: OrderLib,
     signedOrder: SignedOrder,
     fillQty: BigNumber,
     txParams: ITxParams = {}
   ): Promise<OrderTransactionInfo> {
-    assert.isETHAddressHex('orderLibAddress', orderLibAddress);
     // assert.isSchemaValid('SignedOrder', signedOrder, schemas.SignedOrderSchema);
 
     const contractSetWrapper: ContractSet = await this._getContractSetByMarketContractAddressAsync(
@@ -143,15 +143,11 @@ export class ContractWrapper {
       return Promise.reject(new Error(MarketError.BuySellMismatch));
     }
 
-    const orderHash = await createOrderHashAsync(
-      this._web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await createOrderHashAsync(this._web3.currentProvider, orderLib, signedOrder);
 
     const validSignature = await isValidSignatureAsync(
       this._web3.currentProvider,
-      orderLibAddress,
+      orderLib,
       signedOrder,
       orderHash
     );

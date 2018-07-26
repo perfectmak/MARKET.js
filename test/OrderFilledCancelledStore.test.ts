@@ -6,10 +6,7 @@ import { ERC20, MarketCollateralPool, MarketContract, SignedOrder } from '@marke
 import { Market, Utils } from '../src';
 import { constants } from '../src/constants';
 
-import { createOrderHashAsync, createSignedOrderAsync } from '../src/lib/Order';
-
 import { OrderFilledCancelledLazyStore } from '../src/OrderFilledCancelledLazyStore';
-import { JSONRPCResponsePayload } from '@0xproject/types';
 import { MARKETProtocolConfig } from '../src/types';
 import { createEVMSnapshot, restoreEVMSnapshot } from './utils';
 
@@ -17,7 +14,6 @@ describe('Order filled/cancelled store', async () => {
   let web3: Web3;
   let config: MARKETProtocolConfig;
   let market: Market;
-  let orderLibAddress: string;
   let contractAddresses: string[];
   let contractAddress: string;
   let deploymentAddress: string;
@@ -40,7 +36,6 @@ describe('Order filled/cancelled store', async () => {
     web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:9545'));
     config = { networkId: constants.NETWORK_ID_TRUFFLE };
     market = new Market(web3.currentProvider, config);
-    orderLibAddress = market.orderLib.address;
     contractAddresses = await market.marketContractRegistry.getAddressWhiteList;
     contractAddress = contractAddresses[0];
     deploymentAddress = web3.eth.accounts[0];
@@ -64,7 +59,6 @@ describe('Order filled/cancelled store', async () => {
       from: taker
     });
     signedOrder = await market.createSignedOrderAsync(
-      orderLibAddress,
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       constants.NULL_ADDRESS,
@@ -106,11 +100,7 @@ describe('Order filled/cancelled store', async () => {
       gas: 400000
     });
 
-    const orderHash = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await market.createOrderHashAsync(signedOrder);
     const store = new OrderFilledCancelledLazyStore(market.marketContractWrapper);
 
     const qty = await store.getQtyFilledOrCancelledAsync(deployedMarketContract.address, orderHash);
@@ -125,11 +115,7 @@ describe('Order filled/cancelled store', async () => {
       gas: 400000
     });
 
-    const orderHash = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await market.createOrderHashAsync(signedOrder);
     const store = new OrderFilledCancelledLazyStore(market.marketContractWrapper);
 
     await store.getQtyFilledOrCancelledAsync(deployedMarketContract.address, orderHash);

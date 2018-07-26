@@ -13,14 +13,7 @@ import {
 import { Market, MARKETProtocolConfig, Utils } from '../src';
 import { constants } from '../src/constants';
 
-import {
-  createOrderHashAsync,
-  createSignedOrderAsync,
-  isValidSignatureAsync,
-  signOrderHashAsync
-} from '../src/lib/Order';
-
-import { createEVMSnapshot, getContractAddress, restoreEVMSnapshot } from './utils';
+import { createEVMSnapshot, restoreEVMSnapshot } from './utils';
 import { MarketError } from '../src/types';
 
 /**
@@ -32,13 +25,11 @@ describe('Order', () => {
     networkId: constants.NETWORK_ID_TRUFFLE
   };
   let market: Market;
-  let orderLibAddress: string;
   let contractAddress: string;
   let snapshotId: string;
 
   beforeAll(async () => {
     market = new Market(web3.currentProvider, config);
-    orderLibAddress = getContractAddress('OrderLib', constants.NETWORK_ID_TRUFFLE);
     const contractAddresses: string[] = await market.marketContractRegistry.getAddressWhiteList;
     contractAddress = contractAddresses[0];
     jest.setTimeout(30000);
@@ -53,36 +44,6 @@ describe('Order', () => {
   });
 
   describe('createSignedOrderAsync', () => {
-    it('should throw error if orderLibAddress is invalid eth address', async () => {
-      const invalidOrderLibAddress = 'Invalid eth address';
-      const contractAddresses: string[] = await market.marketContractRegistry.getAddressWhiteList;
-      const marketContractAddress = contractAddresses[0];
-
-      const expirationTimeStamp: BigNumber = new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60);
-      const makerAccount = web3.eth.accounts[1];
-
-      const fees: BigNumber = new BigNumber(0);
-      const orderQty: BigNumber = new BigNumber(100);
-      const price: BigNumber = new BigNumber(100000);
-
-      await expect(
-        createSignedOrderAsync(
-          web3.currentProvider,
-          invalidOrderLibAddress,
-          marketContractAddress,
-          expirationTimeStamp,
-          constants.NULL_ADDRESS,
-          makerAccount,
-          fees,
-          constants.NULL_ADDRESS,
-          fees,
-          orderQty,
-          price,
-          Utils.generatePseudoRandomSalt()
-        )
-      ).rejects.toThrow(Error);
-    });
-
     it('should throw error if contractAddress is invalid eth address', async () => {
       const invalidContractAddress = '000000';
 
@@ -94,9 +55,7 @@ describe('Order', () => {
       const price: BigNumber = new BigNumber(100000);
 
       await expect(
-        createSignedOrderAsync(
-          web3.currentProvider,
-          orderLibAddress,
+        market.createSignedOrderAsync(
           invalidContractAddress,
           expirationTimeStamp,
           constants.NULL_ADDRESS,
@@ -112,51 +71,10 @@ describe('Order', () => {
     });
   });
 
-  describe('isValidSignatureAsync', () => {
-    it('should throw error if orderLibAddress is invalid eth address', async () => {
-      const contractAddresses: string[] = await market.marketContractRegistry.getAddressWhiteList;
-      const marketContractAddress = contractAddresses[0];
-
-      const expirationTimeStamp: BigNumber = new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60);
-      const makerAccount = web3.eth.accounts[1];
-
-      const fees: BigNumber = new BigNumber(0);
-      const orderQty: BigNumber = new BigNumber(100);
-      const price: BigNumber = new BigNumber(100000);
-
-      const signedOrder: SignedOrder = await createSignedOrderAsync(
-        web3.currentProvider,
-        orderLibAddress,
-        marketContractAddress,
-        expirationTimeStamp,
-        constants.NULL_ADDRESS,
-        makerAccount,
-        fees,
-        constants.NULL_ADDRESS,
-        fees,
-        orderQty,
-        price,
-        Utils.generatePseudoRandomSalt()
-      );
-      const orderHash: string | BigNumber = await createOrderHashAsync(
-        web3.currentProvider,
-        orderLibAddress,
-        signedOrder
-      );
-      const invalidOrderLibAddress = '000';
-
-      expect(
-        isValidSignatureAsync(web3.currentProvider, invalidOrderLibAddress, signedOrder, orderHash)
-      ).rejects.toThrow(Error);
-    });
-  });
-
   describe('signOrderHashAsync', () => {
     it('should throw error if signerAddress is invalid eth address', () => {
       const invalidSignerAddress = '0xabcdef';
-      expect(signOrderHashAsync(web3.currentProvider, '', invalidSignerAddress)).rejects.toThrow(
-        Error
-      );
+      expect(market.signOrderHashAsync('', invalidSignerAddress)).rejects.toThrow(Error);
     });
   });
 
@@ -172,9 +90,7 @@ describe('Order', () => {
     const orderQty: BigNumber = new BigNumber(100);
     const price: BigNumber = new BigNumber(100000);
 
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       marketContractAddress,
       expirationTimeStamp,
       constants.NULL_ADDRESS,
@@ -187,20 +103,9 @@ describe('Order', () => {
       Utils.generatePseudoRandomSalt()
     );
 
-    const orderHash: string | BigNumber = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash: string | BigNumber = await market.createOrderHashAsync(signedOrder);
 
-    expect(
-      await isValidSignatureAsync(
-        web3.currentProvider,
-        orderLibAddress,
-        signedOrder,
-        orderHash.toString()
-      )
-    ).toBe(true);
+    expect(await market.isValidSignatureAsync(signedOrder, orderHash.toString())).toBe(true);
 
     // Create manipulated order to ensure check fails.
 
@@ -219,52 +124,19 @@ describe('Order', () => {
       ecSignature: signedOrder.ecSignature
     };
 
-    const orderHashFake: string | BigNumber = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrderFake
-    );
+    const orderHashFake: string = await market.createOrderHashAsync(signedOrderFake);
 
-    expect(
-      await isValidSignatureAsync(
-        web3.currentProvider,
-        orderLibAddress,
-        signedOrderFake,
-        orderHashFake.toString()
-      )
-    ).toBe(false);
+    expect(await market.isValidSignatureAsync(signedOrderFake, orderHashFake)).toBe(false);
 
     // fix signature to ensure it works
-    signedOrderFake.ecSignature = await signOrderHashAsync(
-      web3.currentProvider,
-      String(orderHashFake),
-      makerAccount
-    );
+    signedOrderFake.ecSignature = await market.signOrderHashAsync(orderHashFake, makerAccount);
 
-    expect(
-      await isValidSignatureAsync(
-        web3.currentProvider,
-        orderLibAddress,
-        signedOrderFake,
-        orderHashFake.toString()
-      )
-    ).toBe(true);
+    expect(await market.isValidSignatureAsync(signedOrderFake, orderHashFake)).toBe(true);
 
     // attempt to sign from different account to ensure it fails.
-    signedOrderFake.ecSignature = await signOrderHashAsync(
-      web3.currentProvider,
-      String(orderHashFake),
-      takerAccount
-    );
+    signedOrderFake.ecSignature = await market.signOrderHashAsync(orderHashFake, takerAccount);
 
-    expect(
-      await isValidSignatureAsync(
-        web3.currentProvider,
-        orderLibAddress,
-        signedOrderFake,
-        orderHashFake.toString()
-      )
-    ).toBe(false);
+    expect(await market.isValidSignatureAsync(signedOrderFake, orderHashFake)).toBe(false);
   });
 
   it('Trades an order', async () => {
@@ -309,9 +181,7 @@ describe('Order', () => {
     const orderQty: BigNumber = new BigNumber(100);
     const price: BigNumber = new BigNumber(100000);
 
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       expirationTimestamp,
       constants.NULL_ADDRESS,
@@ -324,20 +194,9 @@ describe('Order', () => {
       Utils.generatePseudoRandomSalt()
     );
 
-    const orderHash = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await market.createOrderHashAsync(signedOrder);
 
-    expect(
-      await isValidSignatureAsync(
-        web3.currentProvider,
-        orderLibAddress,
-        signedOrder,
-        orderHash.toString()
-      )
-    ).toBe(true);
+    expect(await market.isValidSignatureAsync(signedOrder, orderHash)).toBe(true);
 
     const orderTxInfo = await market.tradeOrderAsync(signedOrder, new BigNumber(2), {
       from: taker,
@@ -431,9 +290,7 @@ describe('Order', () => {
     const orderQty: BigNumber = new BigNumber(2);
     const price: BigNumber = new BigNumber(100000);
 
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       expirationTimestamp,
       constants.NULL_ADDRESS,
@@ -503,9 +360,7 @@ describe('Order', () => {
     const orderQty: BigNumber = new BigNumber(100);
     const price: BigNumber = new BigNumber(100000);
 
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       expirationTimestamp,
       constants.NULL_ADDRESS,
@@ -517,11 +372,7 @@ describe('Order', () => {
       price,
       Utils.generatePseudoRandomSalt()
     );
-    const orderHash = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await market.createOrderHashAsync(signedOrder);
 
     expect(
       await market.getQtyFilledOrCancelledFromOrderAsync(contractAddress, orderHash.toString())

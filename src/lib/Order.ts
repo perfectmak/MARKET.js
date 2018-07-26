@@ -10,24 +10,18 @@ import { assert } from '../assert';
 
 /**
  * Computes the orderHash for a supplied order.
- * @param   provider   Web3 provider instance.
- * @param   orderLibAddress address of the deployed OrderLib.sol
- * @param   order      An object that confirms to the Order interface definitions.
- * @return  The resulting orderHash from hashing the supplied order.
+ * @param {Provider} provider           Web3 provider instance.
+ * @param {OrderLib} orderLib           OrderLib.sol type chain object
+ * @param {Order | SignedOrder} order   An object that confirms to the Order interface definitions.
+ * @return {Promise<string>}            The resulting orderHash from hashing the supplied order.
  */
 export async function createOrderHashAsync(
   provider: Provider,
-  orderLibAddress: string,
+  orderLib: OrderLib,
   order: Order | SignedOrder
 ): Promise<string> {
   // below assert statement fails due to issues with BigNumber vs Number.
   // assert.isSchemaValid('Order', order, schemas.OrderSchema);
-  assert.isETHAddressHex('orderLibAddress', orderLibAddress);
-
-  const web3: Web3 = new Web3();
-  web3.setProvider(provider);
-
-  const orderLib: OrderLib = await OrderLib.createAndValidate(web3, orderLibAddress);
 
   return orderLib
     .createOrderHash(
@@ -49,7 +43,7 @@ export async function createOrderHashAsync(
 /***
  * Creates and signs a new order given the arguments provided
  * @param {Provider} provider               Web3 provider instance.
- * @param {string} orderLibAddress          address of the deployed OrderLib.sol
+ * @param {OrderLib} orderLib               OrderLib.sol type chain object
  * @param {string} contractAddress          address of the deployed MarketContract.sol
  * @param {BigNumber} expirationTimestamp   unix timestamp
  * @param {string} feeRecipient             address of account to receive fees
@@ -64,7 +58,7 @@ export async function createOrderHashAsync(
  */
 export async function createSignedOrderAsync(
   provider: Provider,
-  orderLibAddress: string,
+  orderLib: OrderLib,
   contractAddress: string,
   expirationTimestamp: BigNumber,
   feeRecipient: string,
@@ -76,7 +70,6 @@ export async function createSignedOrderAsync(
   price: BigNumber,
   salt: BigNumber
 ): Promise<SignedOrder> {
-  assert.isETHAddressHex('orderLibAddress', orderLibAddress);
   assert.isETHAddressHex('contractAddress', contractAddress);
 
   const order: Order = {
@@ -93,11 +86,7 @@ export async function createSignedOrderAsync(
     takerFee: takerFee
   };
 
-  const orderHash: string | BigNumber = await createOrderHashAsync(
-    provider,
-    orderLibAddress,
-    order
-  );
+  const orderHash: string | BigNumber = await createOrderHashAsync(provider, orderLib, order);
 
   const signedOrder: SignedOrder = {
     ...order,
@@ -109,23 +98,18 @@ export async function createSignedOrderAsync(
 
 /**
  * Confirms a signed order is validly signed
- * @param provider
- * @param orderLibAddress
- * @param signedOrder
- * @param orderHash
- * @return boolean if order hash and signature resolve to maker address (signer)
+ * @param {Provider} provider
+ * @param {OrderLib} orderLib
+ * @param {SignedOrder} signedOrder
+ * @param {string} orderHash
+ * @return {Promise<boolean>}         if order hash and signature resolve to maker address (signer)
  */
 export async function isValidSignatureAsync(
   provider: Provider,
-  orderLibAddress: string,
+  orderLib: OrderLib,
   signedOrder: SignedOrder,
   orderHash: string
 ): Promise<boolean> {
-  assert.isETHAddressHex('orderLibAddress', orderLibAddress);
-
-  const web3: Web3 = new Web3();
-  web3.setProvider(provider);
-  const orderLib: OrderLib = await OrderLib.createAndValidate(web3, orderLibAddress);
   return orderLib.isValidSignature(
     signedOrder.maker,
     orderHash,
