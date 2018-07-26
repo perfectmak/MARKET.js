@@ -360,7 +360,7 @@ export class Market {
    * @return {Promise<string>}             The resulting orderHash from hashing the supplied order.
    */
   public async createOrderHashAsync(order: Order | SignedOrder): Promise<string> {
-    return createOrderHashAsync(this._web3.currentProvider, this.orderLib, order);
+    return createOrderHashAsync(this.orderLib, order);
   }
 
   /**
@@ -373,7 +373,7 @@ export class Market {
     signedOrder: SignedOrder,
     orderHash: string
   ): Promise<boolean> {
-    return isValidSignatureAsync(this._web3.currentProvider, this.orderLib, signedOrder, orderHash);
+    return isValidSignatureAsync(this.orderLib, signedOrder, orderHash);
   }
 
   /**

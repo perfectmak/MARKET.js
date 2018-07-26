@@ -143,14 +143,9 @@ export class ContractWrapper {
       return Promise.reject(new Error(MarketError.BuySellMismatch));
     }
 
-    const orderHash = await createOrderHashAsync(this._web3.currentProvider, orderLib, signedOrder);
+    const orderHash = await createOrderHashAsync(orderLib, signedOrder);
 
-    const validSignature = await isValidSignatureAsync(
-      this._web3.currentProvider,
-      orderLib,
-      signedOrder,
-      orderHash
-    );
+    const validSignature = await isValidSignatureAsync(orderLib, signedOrder, orderHash);
 
     if (!validSignature) {
       return Promise.reject(new Error(MarketError.InvalidSignature));

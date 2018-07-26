@@ -10,13 +10,11 @@ import { assert } from '../assert';
 
 /**
  * Computes the orderHash for a supplied order.
- * @param {Provider} provider           Web3 provider instance.
  * @param {OrderLib} orderLib           OrderLib.sol type chain object
  * @param {Order | SignedOrder} order   An object that confirms to the Order interface definitions.
  * @return {Promise<string>}            The resulting orderHash from hashing the supplied order.
  */
 export async function createOrderHashAsync(
-  provider: Provider,
   orderLib: OrderLib,
   order: Order | SignedOrder
 ): Promise<string> {
@@ -86,11 +84,11 @@ export async function createSignedOrderAsync(
     takerFee: takerFee
   };
 
-  const orderHash: string | BigNumber = await createOrderHashAsync(provider, orderLib, order);
+  const orderHash: string = await createOrderHashAsync(orderLib, order);
 
   const signedOrder: SignedOrder = {
     ...order,
-    ecSignature: await signOrderHashAsync(provider, String(orderHash), maker)
+    ecSignature: await signOrderHashAsync(provider, orderHash, maker)
   };
 
   return signedOrder;
@@ -98,14 +96,12 @@ export async function createSignedOrderAsync(
 
 /**
  * Confirms a signed order is validly signed
- * @param {Provider} provider
  * @param {OrderLib} orderLib
  * @param {SignedOrder} signedOrder
  * @param {string} orderHash
  * @return {Promise<boolean>}         if order hash and signature resolve to maker address (signer)
  */
 export async function isValidSignatureAsync(
-  provider: Provider,
   orderLib: OrderLib,
   signedOrder: SignedOrder,
   orderHash: string
