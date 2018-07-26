@@ -14,7 +14,7 @@ import {
   OrderLib,
   SignedOrder
 } from '@marketprotocol/types';
-import { MARKETProtocolConfig } from './types';
+import { CollateralEvent, MARKETProtocolConfig } from './types';
 import { assert } from './assert';
 
 import {
@@ -30,8 +30,7 @@ import {
 } from './lib/Order';
 import { OrderTransactionInfo } from './lib/OrderTransactionInfo';
 import { MARKETProtocolArtifacts } from './MARKETProtocolArtifacts';
-import { MarketProtocolOraclizeContractWrapper } from './contract_wrappers/MarketProtocolOraclizeContractWrapper';
-import { CollateralEvent } from './contract_wrappers/MarketProtocolContractWrapper';
+import { OraclizeContractWrapper } from './contract_wrappers/OraclizeContractWrapper';
 
 /**
  * The `Market` class is the single entry-point into the MARKET.js library.
@@ -50,7 +49,7 @@ export class Market {
   public orderLib: OrderLib;
 
   // wrappers
-  public marketContractWrapper: MarketProtocolOraclizeContractWrapper;
+  public marketContractWrapper: OraclizeContractWrapper;
 
   // Config
   public readonly config: MARKETProtocolConfig;
@@ -112,7 +111,7 @@ export class Market {
     this.orderLib = new OrderLib(this._web3, config.orderLibAddress);
     /* tslint:enable */
 
-    this.marketContractWrapper = new MarketProtocolOraclizeContractWrapper(this._web3, this);
+    this.marketContractWrapper = new OraclizeContractWrapper(this._web3, this);
   }
   // endregion//Constructors
 

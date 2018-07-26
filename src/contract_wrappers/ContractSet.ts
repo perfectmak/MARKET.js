@@ -1,20 +1,16 @@
+import { ERC20, MarketCollateralPool, MarketContract } from '@marketprotocol/types';
+
 /**
  * Wrapper for all contracts that make up a given set of Market Protocol smart contracts
  */
-import {
-  ERC20,
-  MarketCollateralPool,
-  MarketContract,
-  MarketContractOraclize
-} from '@marketprotocol/types';
-import { MarketProtocolContractSetWrapper } from './MarketProtocolContractSetWrapper';
-
-export class MarketProtocolOraclizeContractSetWrapper extends MarketProtocolContractSetWrapper {
+export class ContractSet {
   // region Members
   // *****************************************************************
   // ****                     Members                             ****
   // *****************************************************************
-  public readonly marketContractOraclize: MarketContractOraclize;
+  public readonly marketContract: MarketContract;
+  public readonly marketCollateralPool: MarketCollateralPool;
+  public readonly collateralToken: ERC20;
   // endregion // members
 
   // region Constructors
@@ -22,12 +18,13 @@ export class MarketProtocolOraclizeContractSetWrapper extends MarketProtocolCont
   // ****                     Constructors                        ****
   // *****************************************************************
   constructor(
-    marketContractOraclize: MarketContractOraclize,
+    marketContract: MarketContract,
     marketCollateralPool: MarketCollateralPool,
     erc20: ERC20
   ) {
-    super(marketContractOraclize, marketCollateralPool, erc20);
-    this.marketContractOraclize = marketContractOraclize;
+    this.marketContract = marketContract;
+    this.marketCollateralPool = marketCollateralPool;
+    this.collateralToken = erc20;
   }
   // endregion//Constructors
 
