@@ -68,7 +68,8 @@ describe('Order filled/cancelled store', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
   });
 

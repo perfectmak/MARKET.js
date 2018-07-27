@@ -88,7 +88,8 @@ describe('Remaining Fillable Calculator', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash = await market.createOrderHashAsync(signedOrder);
@@ -194,7 +195,8 @@ describe('Remaining Fillable Calculator', async () => {
       takerFee,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash = await market.createOrderHashAsync(signedOrder);
@@ -243,7 +245,8 @@ describe('Remaining Fillable Calculator', async () => {
       takerFee,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash = await market.createOrderHashAsync(signedOrder);
@@ -294,7 +297,8 @@ describe('Remaining Fillable Calculator', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash = await market.createOrderHashAsync(signedOrder);
