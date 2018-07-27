@@ -356,15 +356,11 @@ export class Market {
 
   /**
    * Computes the orderHash for a supplied order.
-   * @param {string} orderLibAddress       Address of the deployed OrderLib.
    * @param {Order | SignedOrder} order    An object that conforms to the Order or SignedOrder interface definitions.
    * @return {Promise<string>}             The resulting orderHash from hashing the supplied order.
    */
-  public async createOrderHashAsync(
-    orderLibAddress: string,
-    order: Order | SignedOrder
-  ): Promise<string> {
-    return createOrderHashAsync(this._web3.currentProvider, orderLibAddress, order);
+  public async createOrderHashAsync(order: Order | SignedOrder): Promise<string> {
+    return createOrderHashAsync(this.orderLib, order);
   }
 
   /**
@@ -377,12 +373,7 @@ export class Market {
     signedOrder: SignedOrder,
     orderHash: string
   ): Promise<boolean> {
-    return isValidSignatureAsync(
-      this._web3.currentProvider,
-      this.orderLib.address,
-      signedOrder,
-      orderHash
-    );
+    return isValidSignatureAsync(this.orderLib, signedOrder, orderHash);
   }
 
   /**
@@ -399,7 +390,6 @@ export class Market {
 
   /***
    * Creates and signs a new order given the arguments provided
-   * @param {string} orderLibAddress          address of the deployed OrderLib.sol
    * @param {string} contractAddress          address of the deployed MarketContract.sol
    * @param {BigNumber} expirationTimestamp   unix timestamp
    * @param {string} feeRecipient             address of account to receive fees
@@ -413,7 +403,6 @@ export class Market {
    * @return {Promise<SignedOrder>}
    */
   public async createSignedOrderAsync(
-    orderLibAddress: string,
     contractAddress: string,
     expirationTimestamp: BigNumber,
     feeRecipient: string,
@@ -427,7 +416,7 @@ export class Market {
   ): Promise<SignedOrder> {
     return createSignedOrderAsync(
       this._web3.currentProvider,
-      orderLibAddress,
+      this.orderLib,
       contractAddress,
       expirationTimestamp,
       feeRecipient,
@@ -457,7 +446,7 @@ export class Market {
     txParams: ITxParams = {}
   ): Promise<OrderTransactionInfo> {
     return this.marketContractWrapper.tradeOrderAsync(
-      this.orderLib.address,
+      this.orderLib,
       signedOrder,
       fillQty,
       txParams

@@ -7,15 +7,12 @@ import { MarketError, MARKETProtocolConfig } from '../src/types';
 import { Market, Utils } from '../src';
 import { constants } from '../src/constants';
 
-import { createSignedOrderAsync } from '../src/lib/Order';
-
-import { createEVMSnapshot, getContractAddress, restoreEVMSnapshot } from './utils';
+import { createEVMSnapshot, restoreEVMSnapshot } from './utils';
 
 describe('Order Validation', async () => {
   let web3: Web3;
   let config: MARKETProtocolConfig;
   let market: Market;
-  let orderLibAddress: string;
   let contractAddresses: string[];
   let contractAddress: string;
   let deploymentAddress: string;
@@ -37,7 +34,6 @@ describe('Order Validation', async () => {
     web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:9545'));
     config = { networkId: constants.NETWORK_ID_TRUFFLE };
     market = new Market(web3.currentProvider, config);
-    orderLibAddress = getContractAddress('OrderLib', constants.NETWORK_ID_TRUFFLE);
     contractAddresses = await market.marketContractRegistry.getAddressWhiteList;
     contractAddress = contractAddresses[0];
     deploymentAddress = web3.eth.accounts[0];
@@ -82,9 +78,7 @@ describe('Order Validation', async () => {
     // transfer enough MKT to maker for fees
     await market.mktTokenContract.transferTx(maker, fees).send({ from: deploymentAddress });
 
-    const signedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       feeRecipient,
@@ -116,9 +110,7 @@ describe('Order Validation', async () => {
     // maker approves token for fees
     await market.mktTokenContract.approveTx(feeRecipient, fees).send({ from: maker });
 
-    const signedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       feeRecipient,
@@ -145,9 +137,7 @@ describe('Order Validation', async () => {
       from: maker
     });
     fees = new BigNumber(0);
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       constants.NULL_ADDRESS,
@@ -173,9 +163,7 @@ describe('Order Validation', async () => {
 
   it('Checks sufficient MKT balances for fees', async () => {
     fees = new BigNumber(100);
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       constants.NULL_ADDRESS,
@@ -201,9 +189,7 @@ describe('Order Validation', async () => {
 
   it('Checks valid signature', async () => {
     fees = new BigNumber(0);
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       constants.NULL_ADDRESS,
@@ -235,9 +221,7 @@ describe('Order Validation', async () => {
     await market.depositCollateralAsync(contractAddress, initialCredit, {
       from: taker
     });
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       constants.NULL_ADDRESS,
@@ -263,9 +247,7 @@ describe('Order Validation', async () => {
 
   it('Checks valid timestamp', async () => {
     fees = new BigNumber(0);
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(1),
       constants.NULL_ADDRESS,
@@ -291,9 +273,7 @@ describe('Order Validation', async () => {
 
   it('Checks the order is not fully filled or fully cancelled', async () => {
     fees = new BigNumber(0);
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       constants.NULL_ADDRESS,
@@ -319,9 +299,7 @@ describe('Order Validation', async () => {
 
   it('Checks the order qty and the fill qty are the same sign', async () => {
     fees = new BigNumber(0);
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       constants.NULL_ADDRESS,

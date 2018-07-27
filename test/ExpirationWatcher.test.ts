@@ -6,7 +6,6 @@ import DoneCallback = jest.DoneCallback;
 // Types
 import { Market, MARKETProtocolConfig, Utils } from '../src';
 import { constants } from '../src/constants';
-import { getContractAddress } from './utils';
 import { ExpirationWatcher } from '../src/order_watcher/ExpirationWatcher';
 
 describe('ExpirationWatcher', () => {
@@ -20,12 +19,10 @@ describe('ExpirationWatcher', () => {
   let currentUnixTimestampSec: BigNumber;
   let timer: Sinon.SinonFakeTimers;
   let expirationWatcher: ExpirationWatcher;
-  let orderLibAddress: string;
   let marketContractAddress: string;
   let makerAccount: string;
 
   beforeAll(async () => {
-    orderLibAddress = getContractAddress('OrderLib', constants.NETWORK_ID_TRUFFLE);
     marketContractAddress = (await market.marketContractRegistry.getAddressWhiteList)[0];
     currentUnixTimestampSec = Utils.getCurrentUnixTimestampSec();
     makerAccount = web3.eth.accounts[1];
@@ -48,7 +45,6 @@ describe('ExpirationWatcher', () => {
       const orderLifetimeSec = 60;
       const expirationUnixTimestampSec = currentUnixTimestampSec.plus(orderLifetimeSec);
       const signedOrder = await market.createSignedOrderAsync(
-        orderLibAddress,
         marketContractAddress,
         expirationUnixTimestampSec,
         constants.NULL_ADDRESS,
@@ -60,7 +56,7 @@ describe('ExpirationWatcher', () => {
         new BigNumber(5000),
         Utils.generatePseudoRandomSalt()
       );
-      const orderHash = await market.createOrderHashAsync(orderLibAddress, signedOrder);
+      const orderHash = await market.createOrderHashAsync(signedOrder);
       expirationWatcher.addOrder(orderHash, signedOrder.expirationTimestamp.times(1000));
 
       const callbackAsync = (hash: string) => {
@@ -81,7 +77,6 @@ describe('ExpirationWatcher', () => {
       const orderLifetimeSec = 60;
       const expirationUnixTimestampSec = currentUnixTimestampSec.plus(orderLifetimeSec);
       const signedOrder = await market.createSignedOrderAsync(
-        orderLibAddress,
         marketContractAddress,
         expirationUnixTimestampSec,
         constants.NULL_ADDRESS,
@@ -93,7 +88,7 @@ describe('ExpirationWatcher', () => {
         new BigNumber(5000),
         Utils.generatePseudoRandomSalt()
       );
-      const orderHash = await market.createOrderHashAsync(orderLibAddress, signedOrder);
+      const orderHash = await market.createOrderHashAsync(signedOrder);
       expirationWatcher.addOrder(orderHash, signedOrder.expirationTimestamp.times(1000));
 
       const callbackAsync = (hash: string) => {
@@ -115,7 +110,6 @@ describe('ExpirationWatcher', () => {
       const order2ExpirationUnixTimestampSec = currentUnixTimestampSec.plus(order2Lifetime);
 
       const signedOrder1 = await market.createSignedOrderAsync(
-        orderLibAddress,
         marketContractAddress,
         order1ExpirationUnixTimestampSec,
         constants.NULL_ADDRESS,
@@ -129,7 +123,6 @@ describe('ExpirationWatcher', () => {
       );
 
       const signedOrder2 = await market.createSignedOrderAsync(
-        orderLibAddress,
         marketContractAddress,
         order2ExpirationUnixTimestampSec,
         constants.NULL_ADDRESS,
@@ -142,8 +135,8 @@ describe('ExpirationWatcher', () => {
         Utils.generatePseudoRandomSalt()
       );
 
-      const orderHash1 = await market.createOrderHashAsync(orderLibAddress, signedOrder1);
-      const orderHash2 = await market.createOrderHashAsync(orderLibAddress, signedOrder2);
+      const orderHash1 = await market.createOrderHashAsync(signedOrder1);
+      const orderHash2 = await market.createOrderHashAsync(signedOrder2);
 
       expirationWatcher.addOrder(orderHash2, signedOrder2.expirationTimestamp.times(1000));
       expirationWatcher.addOrder(orderHash1, signedOrder1.expirationTimestamp.times(1000));

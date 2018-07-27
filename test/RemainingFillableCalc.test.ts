@@ -7,16 +7,13 @@ import { MarketError, MARKETProtocolConfig } from '../src/types';
 import { Market, Utils } from '../src';
 import { constants } from '../src/constants';
 
-import { createOrderHashAsync, createSignedOrderAsync } from '../src/lib/Order';
-
-import { createEVMSnapshot, getContractAddress, restoreEVMSnapshot } from './utils';
+import { createEVMSnapshot, restoreEVMSnapshot } from './utils';
 import { RemainingFillableCalculator } from '../src/order_watcher/RemainingFillableCalc';
 
 describe('Remaining Fillable Calculator', async () => {
   let web3: Web3;
   let config: MARKETProtocolConfig;
   let market: Market;
-  let orderLibAddress: string;
   let contractAddresses: string[];
   let contractAddress: string;
   let deploymentAddress: string;
@@ -36,7 +33,6 @@ describe('Remaining Fillable Calculator', async () => {
     web3 = new Web3(new Web3.providers.HttpProvider(constants.PROVIDER_URL_TRUFFLE));
     config = { networkId: constants.NETWORK_ID_TRUFFLE };
     market = new Market(web3.currentProvider, config);
-    orderLibAddress = getContractAddress('OrderLib', constants.NETWORK_ID_TRUFFLE);
     contractAddresses = await market.marketContractRegistry.getAddressWhiteList;
     contractAddress = contractAddresses[0];
     deploymentAddress = web3.eth.accounts[0];
@@ -82,9 +78,7 @@ describe('Remaining Fillable Calculator', async () => {
     let makerFillable: BigNumber;
     let takerFillable: BigNumber;
 
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       constants.NULL_ADDRESS,
@@ -97,11 +91,7 @@ describe('Remaining Fillable Calculator', async () => {
       Utils.generatePseudoRandomSalt()
     );
 
-    const orderHash = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await market.createOrderHashAsync(signedOrder);
 
     const calc = new RemainingFillableCalculator(
       market,
@@ -194,9 +184,7 @@ describe('Remaining Fillable Calculator', async () => {
     const makerFee = new BigNumber(1e32);
     const takerFee = new BigNumber(0);
 
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       deploymentAddress,
@@ -209,11 +197,7 @@ describe('Remaining Fillable Calculator', async () => {
       Utils.generatePseudoRandomSalt()
     );
 
-    const orderHash = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await market.createOrderHashAsync(signedOrder);
 
     const calc = new RemainingFillableCalculator(
       market,
@@ -249,9 +233,7 @@ describe('Remaining Fillable Calculator', async () => {
     const makerFee = new BigNumber(0);
     const takerFee = new BigNumber(1e32);
 
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       deploymentAddress,
@@ -264,11 +246,7 @@ describe('Remaining Fillable Calculator', async () => {
       Utils.generatePseudoRandomSalt()
     );
 
-    const orderHash = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await market.createOrderHashAsync(signedOrder);
 
     const calc = new RemainingFillableCalculator(
       market,
@@ -306,9 +284,7 @@ describe('Remaining Fillable Calculator', async () => {
     let makerFillable: BigNumber;
     let takerFillable: BigNumber;
 
-    const signedOrder: SignedOrder = await createSignedOrderAsync(
-      web3.currentProvider,
-      orderLibAddress,
+    const signedOrder: SignedOrder = await market.createSignedOrderAsync(
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       constants.NULL_ADDRESS,
@@ -321,11 +297,7 @@ describe('Remaining Fillable Calculator', async () => {
       Utils.generatePseudoRandomSalt()
     );
 
-    const orderHash = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await market.createOrderHashAsync(signedOrder);
 
     const calc = new RemainingFillableCalculator(
       market,
