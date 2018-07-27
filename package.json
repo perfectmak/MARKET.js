@@ -1,6 +1,6 @@
 {
   "name": "@marketprotocol/marketjs",
-  "version": "0.0.11",
+  "version": "0.0.12",
   "description": "library for interacting with MARKET Protocol Smart Contracts",
   "keywords": [
     "MARKET Protocol",
