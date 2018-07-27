@@ -61,7 +61,8 @@ describe('ExpirationWatcher', () => {
         new BigNumber(100),
         new BigNumber(5000),
         new BigNumber(100),
-        Utils.generatePseudoRandomSalt()
+        Utils.generatePseudoRandomSalt(),
+        false
       );
       const orderHash = await market.createOrderHashAsync(orderLibAddress, signedOrder);
       expirationWatcher.addOrder(orderHash, signedOrder.expirationTimestamp.times(1000));
@@ -95,7 +96,8 @@ describe('ExpirationWatcher', () => {
         new BigNumber(100),
         new BigNumber(5000),
         new BigNumber(100),
-        Utils.generatePseudoRandomSalt()
+        Utils.generatePseudoRandomSalt(),
+        false
       );
       const orderHash = await market.createOrderHashAsync(orderLibAddress, signedOrder);
       expirationWatcher.addOrder(orderHash, signedOrder.expirationTimestamp.times(1000));
@@ -130,7 +132,8 @@ describe('ExpirationWatcher', () => {
         new BigNumber(100),
         new BigNumber(5000),
         new BigNumber(100),
-        Utils.generatePseudoRandomSalt()
+        Utils.generatePseudoRandomSalt(),
+        false
       );
 
       const signedOrder2 = await market.createSignedOrderAsync(
@@ -145,7 +148,8 @@ describe('ExpirationWatcher', () => {
         new BigNumber(100),
         new BigNumber(5000),
         new BigNumber(100),
-        Utils.generatePseudoRandomSalt()
+        Utils.generatePseudoRandomSalt(),
+        false
       );
 
       const orderHash1 = await market.createOrderHashAsync(orderLibAddress, signedOrder1);

@@ -105,7 +105,8 @@ describe('Remaining Fillable Calculator', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash = await createOrderHashAsync(
@@ -234,7 +235,8 @@ describe('Remaining Fillable Calculator', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash = await createOrderHashAsync(
@@ -290,7 +292,8 @@ describe('Remaining Fillable Calculator', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash = await createOrderHashAsync(
@@ -348,7 +351,8 @@ describe('Remaining Fillable Calculator', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash = await createOrderHashAsync(

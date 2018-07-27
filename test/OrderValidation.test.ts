@@ -110,7 +110,8 @@ describe('Order Validation', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     await expect(
@@ -145,7 +146,8 @@ describe('Order Validation', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     await expect(
@@ -175,7 +177,8 @@ describe('Order Validation', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);
@@ -204,7 +207,8 @@ describe('Order Validation', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);
@@ -233,7 +237,8 @@ describe('Order Validation', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
     signedOrder.ecSignature.s = '0x';
 
@@ -273,7 +278,8 @@ describe('Order Validation', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);
@@ -302,7 +308,8 @@ describe('Order Validation', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);
@@ -331,7 +338,8 @@ describe('Order Validation', async () => {
       new BigNumber(0),
       price,
       new BigNumber(0),
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);
@@ -360,7 +368,8 @@ describe('Order Validation', async () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);

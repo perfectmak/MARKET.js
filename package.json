@@ -111,6 +111,7 @@
     "bignumber.js": "^7.2.1",
     "bintrees": "^1.0.2",
     "ethereum-input-data-decoder": "0.0.12",
+    "ethereumjs-util": "^5.2.0",
     "jsonschema": "^1.2.4",
     "lodash": "^4.17.10",
     "lodash.values": "^4.3.0",
