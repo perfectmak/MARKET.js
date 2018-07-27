@@ -88,7 +88,8 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     await expect(
@@ -120,7 +121,8 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     await expect(
@@ -147,7 +149,8 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);
@@ -173,7 +176,8 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);
@@ -199,7 +203,8 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
     signedOrder.ecSignature.s = '0x';
 
@@ -231,7 +236,8 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);
@@ -257,7 +263,8 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);
@@ -283,7 +290,8 @@ describe('Order Validation', async () => {
       fees,
       new BigNumber(0),
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);
@@ -309,7 +317,8 @@ describe('Order Validation', async () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     expect.assertions(1);

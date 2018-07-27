@@ -65,7 +65,8 @@ describe('Order', () => {
           fees,
           orderQty,
           price,
-          Utils.generatePseudoRandomSalt()
+          Utils.generatePseudoRandomSalt(),
+          false
         )
       ).rejects.toThrow(Error);
     });
@@ -74,7 +75,7 @@ describe('Order', () => {
   describe('signOrderHashAsync', () => {
     it('should throw error if signerAddress is invalid eth address', () => {
       const invalidSignerAddress = '0xabcdef';
-      expect(market.signOrderHashAsync('', invalidSignerAddress)).rejects.toThrow(Error);
+      expect(market.signOrderHashAsync('', invalidSignerAddress, false)).rejects.toThrow(Error);
     });
   });
 
@@ -100,7 +101,8 @@ describe('Order', () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash: string | BigNumber = await market.createOrderHashAsync(signedOrder);
@@ -129,13 +131,20 @@ describe('Order', () => {
     expect(await market.isValidSignatureAsync(signedOrderFake, orderHashFake)).toBe(false);
 
     // fix signature to ensure it works
-    signedOrderFake.ecSignature = await market.signOrderHashAsync(orderHashFake, makerAccount);
+    signedOrderFake.ecSignature = await market.signOrderHashAsync(
+      orderHashFake,
+      makerAccount,
+      false
+    );
 
     expect(await market.isValidSignatureAsync(signedOrderFake, orderHashFake)).toBe(true);
 
     // attempt to sign from different account to ensure it fails.
-    signedOrderFake.ecSignature = await market.signOrderHashAsync(orderHashFake, takerAccount);
-
+    signedOrderFake.ecSignature = await market.signOrderHashAsync(
+      orderHashFake,
+      takerAccount,
+      false
+    );
     expect(await market.isValidSignatureAsync(signedOrderFake, orderHashFake)).toBe(false);
   });
 
@@ -191,7 +200,8 @@ describe('Order', () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash = await market.createOrderHashAsync(signedOrder);
@@ -300,7 +310,8 @@ describe('Order', () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     // first, fill orders
@@ -370,7 +381,8 @@ describe('Order', () => {
       fees,
       orderQty,
       price,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
     const orderHash = await market.createOrderHashAsync(signedOrder);
 
