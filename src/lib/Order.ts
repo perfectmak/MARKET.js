@@ -7,7 +7,8 @@ import { ECSignature, Order, OrderLib, SignedOrder } from '@marketprotocol/types
 
 import { Utils } from './Utils';
 import { assert } from '../assert';
-import * as ethUtil from 'ethereumjs-util';
+
+let ethUtil = require('ethereumjs-util');
 
 /**
  * Computes the orderHash for a supplied order.
