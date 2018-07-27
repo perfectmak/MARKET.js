@@ -72,7 +72,8 @@ describe('Order', () => {
           orderQty,
           price,
           orderQty,
-          Utils.generatePseudoRandomSalt()
+          Utils.generatePseudoRandomSalt(),
+          false
         )
       ).rejects.toThrow(Error);
     });
@@ -103,7 +104,8 @@ describe('Order', () => {
           orderQty,
           price,
           orderQty,
-          Utils.generatePseudoRandomSalt()
+          Utils.generatePseudoRandomSalt(),
+          false
         )
       ).rejects.toThrow(Error);
     });
@@ -135,7 +137,8 @@ describe('Order', () => {
         orderQty,
         price,
         orderQty,
-        Utils.generatePseudoRandomSalt()
+        Utils.generatePseudoRandomSalt(),
+        false
       );
       const orderHash: string | BigNumber = await createOrderHashAsync(
         web3.currentProvider,
@@ -184,7 +187,8 @@ describe('Order', () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash: string | BigNumber = await createOrderHashAsync(
@@ -238,7 +242,8 @@ describe('Order', () => {
     signedOrderFake.ecSignature = await signOrderHashAsync(
       web3.currentProvider,
       String(orderHashFake),
-      makerAccount
+      makerAccount,
+      false
     );
 
     expect(
@@ -254,7 +259,8 @@ describe('Order', () => {
     signedOrderFake.ecSignature = await signOrderHashAsync(
       web3.currentProvider,
       String(orderHashFake),
-      takerAccount
+      takerAccount,
+      false
     );
 
     expect(
@@ -326,7 +332,8 @@ describe('Order', () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
 
     const orderHash = await createOrderHashAsync(
@@ -457,7 +464,8 @@ describe('Order', () => {
       orderQty,
       price,
       orderQty,
-      Utils.generatePseudoRandomSalt()
+      Utils.generatePseudoRandomSalt(),
+      false
     );
     const orderHash = await createOrderHashAsync(
       web3.currentProvider,

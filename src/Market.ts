@@ -363,11 +363,25 @@ export class Market {
    * @param {string} orderHash       Hex encoded orderHash to sign.
    * @param {string} signerAddress   The hex encoded Ethereum address you wish to sign it with. This address
    *                                 must be available via the Provider supplied to MARKET.js.
+   * @param {boolean}                shouldAddPersonalMessagePrefix  Some signers add the personal message prefix
+   * `\x19Ethereum Signed Message`themselves (e.g Parity Signer, Ledger, TestRPC) and others expect
+   * it to already be done by the client (e.g Metamask). Depending on which signer this request is
+   * going to, decide on whether to add the prefix before sending the request.
+   *
    * @return {Promise<ECSignature>}  An object containing the Elliptic curve signature parameters generated
    *                                 by signing the orderHash.
    */
-  public async signOrderHashAsync(orderHash: string, signerAddress: string): Promise<ECSignature> {
-    return signOrderHashAsync(this._web3.currentProvider, orderHash, signerAddress);
+  public async signOrderHashAsync(
+    orderHash: string,
+    signerAddress: string,
+    shouldAddPersonalMessagePrefix: boolean
+  ): Promise<ECSignature> {
+    return signOrderHashAsync(
+      this._web3.currentProvider,
+      orderHash,
+      signerAddress,
+      shouldAddPersonalMessagePrefix
+    );
   }
 
   /***
@@ -384,6 +398,10 @@ export class Market {
    * @param {BigNumber} price                 price of Order
    * @param {BigNumber} remainingQty          qty remaining
    * @param {BigNumber} salt                  used to ensure unique order hashes
+   * @param {boolean}  shouldAddPersonalMessagePrefix  Some signers add the personal message prefix
+   * `\x19Ethereum Signed Message`themselves (e.g Parity Signer, Ledger, TestRPC) and others expect
+   * it to already be done by the client (e.g Metamask). Depending on which signer this request is
+   * going to, decide on whether to add the prefix before sending the request.
    * @return {Promise<SignedOrder>}
    */
   public async createSignedOrderAsync(
@@ -398,7 +416,8 @@ export class Market {
     orderQty: BigNumber,
     price: BigNumber,
     remainingQty: BigNumber,
-    salt: BigNumber
+    salt: BigNumber,
+    shouldAddPersonalMessagePrefix: boolean
   ): Promise<SignedOrder> {
     return createSignedOrderAsync(
       this._web3.currentProvider,
@@ -413,7 +432,8 @@ export class Market {
       orderQty,
       price,
       remainingQty,
-      salt
+      salt,
+      shouldAddPersonalMessagePrefix
     );
   }
 
