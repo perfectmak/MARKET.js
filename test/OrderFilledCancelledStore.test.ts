@@ -6,10 +6,7 @@ import { ERC20, MarketCollateralPool, MarketContract, SignedOrder } from '@marke
 import { Market, Utils } from '../src';
 import { constants } from '../src/constants';
 
-import { createOrderHashAsync, createSignedOrderAsync } from '../src/lib/Order';
-
 import { OrderFilledCancelledLazyStore } from '../src/OrderFilledCancelledLazyStore';
-import { JSONRPCResponsePayload } from '@0xproject/types';
 import { MARKETProtocolConfig } from '../src/types';
 import { createEVMSnapshot, restoreEVMSnapshot } from './utils';
 
@@ -17,7 +14,6 @@ describe('Order filled/cancelled store', async () => {
   let web3: Web3;
   let config: MARKETProtocolConfig;
   let market: Market;
-  let orderLibAddress: string;
   let contractAddresses: string[];
   let contractAddress: string;
   let deploymentAddress: string;
@@ -40,7 +36,6 @@ describe('Order filled/cancelled store', async () => {
     web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:9545'));
     config = { networkId: constants.NETWORK_ID_TRUFFLE };
     market = new Market(web3.currentProvider, config);
-    orderLibAddress = market.orderLib.address;
     contractAddresses = await market.marketContractRegistry.getAddressWhiteList;
     contractAddress = contractAddresses[0];
     deploymentAddress = web3.eth.accounts[0];
@@ -55,16 +50,15 @@ describe('Order filled/cancelled store', async () => {
     orderQty = new BigNumber(100);
     price = new BigNumber(100000);
     fees = new BigNumber(0);
-    let makerCollateral = await market.getUserAccountBalanceAsync(collateralPoolAddress, maker);
-    let takerCollateral = await market.getUserAccountBalanceAsync(collateralPoolAddress, taker);
-    await market.withdrawCollateralAsync(collateralPoolAddress, makerCollateral, {
+    let makerCollateral = await market.getUserAccountBalanceAsync(contractAddress, maker);
+    let takerCollateral = await market.getUserAccountBalanceAsync(contractAddress, taker);
+    await market.withdrawCollateralAsync(contractAddress, makerCollateral, {
       from: maker
     });
-    await market.withdrawCollateralAsync(collateralPoolAddress, takerCollateral, {
+    await market.withdrawCollateralAsync(contractAddress, takerCollateral, {
       from: taker
     });
     signedOrder = await market.createSignedOrderAsync(
-      orderLibAddress,
       contractAddress,
       new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60),
       constants.NULL_ADDRESS,
@@ -74,7 +68,6 @@ describe('Order filled/cancelled store', async () => {
       fees,
       orderQty,
       price,
-      orderQty,
       Utils.generatePseudoRandomSalt(),
       false
     );
@@ -85,24 +78,14 @@ describe('Order filled/cancelled store', async () => {
     snapshotId = await createEVMSnapshot(web3);
     await collateralToken.transferTx(maker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
-    await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
-      initialCredit,
-      {
-        from: maker
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: maker
+    });
     await collateralToken.transferTx(taker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: taker });
-    await market.depositCollateralAsync(
-      collateralPoolAddress,
-      collateralTokenAddress,
-      initialCredit,
-      {
-        from: taker
-      }
-    );
+    await market.depositCollateralAsync(contractAddress, initialCredit, {
+      from: taker
+    });
   });
 
   afterEach(async () => {
@@ -118,11 +101,7 @@ describe('Order filled/cancelled store', async () => {
       gas: 400000
     });
 
-    const orderHash = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await market.createOrderHashAsync(signedOrder);
     const store = new OrderFilledCancelledLazyStore(market.marketContractWrapper);
 
     const qty = await store.getQtyFilledOrCancelledAsync(deployedMarketContract.address, orderHash);
@@ -137,11 +116,7 @@ describe('Order filled/cancelled store', async () => {
       gas: 400000
     });
 
-    const orderHash = await createOrderHashAsync(
-      web3.currentProvider,
-      orderLibAddress,
-      signedOrder
-    );
+    const orderHash = await market.createOrderHashAsync(signedOrder);
     const store = new OrderFilledCancelledLazyStore(market.marketContractWrapper);
 
     await store.getQtyFilledOrCancelledAsync(deployedMarketContract.address, orderHash);
