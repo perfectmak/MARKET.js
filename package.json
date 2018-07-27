@@ -110,6 +110,7 @@
     "@marketprotocol/abis": "0.0.1",
     "bignumber.js": "^7.2.1",
     "bintrees": "^1.0.2",
+    "elliptic": "^6.4.0",
     "ethereumjs-util": "^5.2.0",
     "jsonschema": "^1.2.4",
     "lodash": "^4.17.10",
