@@ -548,13 +548,13 @@ export class ContractWrapper {
    * @param {string} marketContractAddress       address of the MarketContract
    * @param {BigNumber | string} userAddress     address of user
    * @param {number | BigNumber} index           index0 based index of a position in the positions array
-   * @returns {Promise<BigNumber[2]>}            user's position(price, qty) at the given index
+   * @returns {Promise<BigNumber[]>}            user's position(price, qty) at the given index
    */
   public async getUserPositionAsync(
     marketContractAddress: string,
     userAddress: string,
     index: number | BigNumber
-  ): Promise<BigNumber[2]> {
+  ): Promise<BigNumber[]> {
     const contractSetWrapper: ContractSet = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
     );
@@ -588,13 +588,17 @@ export class ContractWrapper {
 
     let positions: BigNumber[][] = [];
     let i: number;
+    interface LooseObj {
+      [key: string]: number;
+    }
+    let res: LooseObj = {};
 
     const currentPositionCount = new BigNumber(
       await contractSetWrapper.marketCollateralPool.getUserPositionCount(userAddress)
     );
 
     if (currentPositionCount.isGreaterThan(0)) {
-      for (i = 0; i < currentPositionCount; i++) {
+      for (i = 0; i < currentPositionCount.toNumber(); i++) {
         const userPosition = await contractSetWrapper.marketCollateralPool.getUserPosition(
           userAddress,
           i
@@ -613,17 +617,17 @@ export class ContractWrapper {
       }
 
       if (consolidate) {
-        positions = positions.reduce((result, position) => {
-          if (typeof result[position[0]] === 'undefined') {
+        const uniquePositions = positions.reduce((result, position) => {
+          if (typeof result[position[0].toNumber()] === 'undefined') {
             result[position[0].toNumber()] = position[1].toNumber();
           } else {
             result[position[0].toNumber()] += position[1].toNumber();
           }
           return result;
-        }, {});
+        }, res);
 
-        positions = Object.keys(positions).map(key => {
-          return [new BigNumber(Number(key)), new BigNumber(positions[key])];
+        positions = Object.keys(uniquePositions).map(key => {
+          return [new BigNumber(Number(key)), new BigNumber(uniquePositions[key])];
         });
       }
 

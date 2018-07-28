@@ -261,13 +261,13 @@ export class Market {
    * @param {string} marketContractAddress       address of the MarketContract
    * @param {BigNumber | string} userAddress     address of user
    * @param {number | BigNumber} index           index0 based index of a position in the positions array
-   * @returns {Promise<BigNumber[2]>}            user's position(price, qty) at the given index
+   * @returns {Promise<BigNumber[]>}            user's position(price, qty) at the given index
    */
   public async getUserPositionAsync(
     marketContractAddress: string,
     userAddress: string,
     index: number | BigNumber
-  ): Promise<BigNumber[2]> {
+  ): Promise<BigNumber[]> {
     return this.marketContractWrapper.getUserPositionAsync(
       marketContractAddress,
       userAddress,
