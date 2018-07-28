@@ -12,9 +12,8 @@ import {
   OrderLib,
   SignedOrder
 } from '@marketprotocol/types';
-import { MarketError } from '../types';
+import { CollateralEvent, MarketError } from '../types';
 import { Transaction } from '@0xproject/types';
-import { CollateralEvent } from '../types/';
 import { assert } from '../assert';
 
 import { Utils } from '../lib/Utils';
@@ -510,6 +509,128 @@ export class ContractWrapper {
       }
     }
     return collateralEvents;
+  }
+
+  /**
+   * Gets the number of positions currently held by this userAddress
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {BigNumber | string} userAddress     address of user
+   * @returns {Promise<BigNumber>}               count of user's current positions
+   */
+  public async getPositionCountAsync(
+    marketContractAddress: string,
+    userAddress: string
+  ): Promise<BigNumber> {
+    const contractSetWrapper: ContractSet = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+    return contractSetWrapper.marketCollateralPool.getUserPositionCount(userAddress);
+  }
+
+  /**
+   * Gets the user's current net position
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {BigNumber | string} userAddress     address of user
+   * @returns {Promise<BigNumber>}               user's current net position value
+   */
+  public async getUserNetPositionAsync(
+    marketContractAddress: string,
+    userAddress: string
+  ): Promise<BigNumber> {
+    const contractSetWrapper: ContractSet = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+    return contractSetWrapper.marketCollateralPool.getUserNetPosition(userAddress);
+  }
+
+  /**
+   * Gets the user position at the specified index from the user's positions array
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {BigNumber | string} userAddress     address of user
+   * @param {number | BigNumber} index           index0 based index of a position in the positions array
+   * @returns {Promise<BigNumber[2]>}            user's position(price, qty) at the given index
+   */
+  public async getUserPositionAsync(
+    marketContractAddress: string,
+    userAddress: string,
+    index: number | BigNumber
+  ): Promise<BigNumber[2]> {
+    const contractSetWrapper: ContractSet = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+
+    const currentPositionCount = new BigNumber(
+      await contractSetWrapper.marketCollateralPool.getUserPositionCount(userAddress)
+    );
+    if (currentPositionCount.isLessThan(1)) {
+      return Promise.reject(new Error(MarketError.UserHasNoAssociatedPositions));
+    }
+    return contractSetWrapper.marketCollateralPool.getUserPosition(userAddress, index);
+  }
+
+  /**
+   * Gets all of user's positions
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {BigNumber | string} userAddress     address of user
+   * @param {boolean} sort                       flag argument to sort positions by price
+   * @param {boolean} consolidate                flag argument to consolidate positions based on their price
+   * @returns {Promise<BigNumber[][]>}           user's positions array
+   */
+  public async getUserPositionsAsync(
+    marketContractAddress: string,
+    userAddress: string,
+    sort: boolean,
+    consolidate: boolean
+  ): Promise<BigNumber[][]> {
+    const contractSetWrapper: ContractSet = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+
+    let positions: BigNumber[][] = [];
+    let i: number;
+
+    const currentPositionCount = new BigNumber(
+      await contractSetWrapper.marketCollateralPool.getUserPositionCount(userAddress)
+    );
+
+    if (currentPositionCount.isGreaterThan(0)) {
+      for (i = 0; i < currentPositionCount; i++) {
+        const userPosition = await contractSetWrapper.marketCollateralPool.getUserPosition(
+          userAddress,
+          i
+        );
+        positions.push(userPosition);
+      }
+
+      if (sort) {
+        positions.sort((a, b) => {
+          if (a[0].toNumber() === b[0].toNumber()) {
+            return 0;
+          } else {
+            return a[0].toNumber() < b[0].toNumber() ? -1 : 1;
+          }
+        });
+      }
+
+      if (consolidate) {
+        positions = positions.reduce((result, position) => {
+          if (typeof result[position[0]] === 'undefined') {
+            result[position[0].toNumber()] = position[1].toNumber();
+          } else {
+            result[position[0].toNumber()] += position[1].toNumber();
+          }
+          return result;
+        }, {});
+
+        positions = Object.keys(positions).map(key => {
+          return [new BigNumber(Number(key)), new BigNumber(positions[key])];
+        });
+      }
+
+      return positions;
+    } else {
+      return Promise.reject(new Error(MarketError.UserHasNoAssociatedPositions));
+    }
   }
 
   // endregion //Public Collateral Methods

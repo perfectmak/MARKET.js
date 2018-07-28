@@ -17,5 +17,6 @@ export enum MarketError {
   UnknownOrderError = 'UNKNOWN_ORDER_ERROR',
   OrderFilledOrCancelled = 'ORDER_FILLED_OR_CANCELLED',
   BuySellMismatch = 'BUY/SELL MISMATCH',
-  ContractAlreadySettled = 'CONTRACT_ALREADY_SETTLED'
+  ContractAlreadySettled = 'CONTRACT_ALREADY_SETTLED',
+  UserHasNoAssociatedPositions = 'USER_HAS_NO_ASSOCIATED_POSITIONS'
 }

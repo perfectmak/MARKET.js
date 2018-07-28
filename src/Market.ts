@@ -230,6 +230,73 @@ export class Market {
     );
   }
 
+  /**
+   * Gets the number of positions currently held by this userAddress
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {BigNumber | string} userAddress     address of user
+   * @returns {Promise<BigNumber>}               count of user's current positions
+   */
+  public async getPositionCountAsync(
+    marketContractAddress: string,
+    userAddress: string
+  ): Promise<BigNumber> {
+    return this.marketContractWrapper.getPositionCountAsync(marketContractAddress, userAddress);
+  }
+
+  /**
+   * Gets the user's current net position
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {BigNumber | string} userAddress     address of user
+   * @returns {Promise<BigNumber>}               user's current net position value
+   */
+  public async getUserNetPositionAsync(
+    marketContractAddress: string,
+    userAddress: string
+  ): Promise<BigNumber> {
+    return this.marketContractWrapper.getUserNetPositionAsync(marketContractAddress, userAddress);
+  }
+
+  /**
+   * Gets the user position at the specified index from the user's positions array
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {BigNumber | string} userAddress     address of user
+   * @param {number | BigNumber} index           index0 based index of a position in the positions array
+   * @returns {Promise<BigNumber[2]>}            user's position(price, qty) at the given index
+   */
+  public async getUserPositionAsync(
+    marketContractAddress: string,
+    userAddress: string,
+    index: number | BigNumber
+  ): Promise<BigNumber[2]> {
+    return this.marketContractWrapper.getUserPositionAsync(
+      marketContractAddress,
+      userAddress,
+      index
+    );
+  }
+
+  /**
+   * Gets all of user's positions
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {BigNumber | string} userAddress     address of user
+   * @param {boolean} sort                       flag argument to sort positions by price
+   * @param {boolean} consolidate                flag argument to consolidate positions based on their price
+   * @returns {Promise<BigNumber[][]>}           user's positions array
+   */
+  public async getUserPositionsAsync(
+    marketContractAddress: string,
+    userAddress: string,
+    sort: boolean,
+    consolidate: boolean
+  ): Promise<BigNumber[][]> {
+    return this.marketContractWrapper.getUserPositionsAsync(
+      marketContractAddress,
+      userAddress,
+      sort,
+      consolidate
+    );
+  }
+
   // CONTRACT METHODS
 
   /**
