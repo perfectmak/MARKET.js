@@ -20,6 +20,7 @@ describe('Deployment Tests', () => {
 
   it('Deploys a MARKET Contract Correctly', async () => {
     jest.setTimeout(30000);
+
     const collateralTokenAddress = getContractAddress(
       'CollateralToken',
       constants.NETWORK_ID_TRUFFLE
@@ -40,7 +41,7 @@ describe('Deployment Tests', () => {
     const oracleQuery: string =
       'json(https://api.kraken.com/0/public/Ticker?pair=ETHUSD).result.XETHZUSD.c.0';
 
-    const deployedAddress = await market.deployMarketContractOraclizeAsync(
+    const txHash = await market.deployMarketContractOraclizeAsync(
       contractName,
       collateralTokenAddress,
       contractSpecs,
@@ -49,8 +50,13 @@ describe('Deployment Tests', () => {
       txParams
     );
 
-    deployMarketContract = await MarketContractOraclize.createAndValidate(web3, deployedAddress);
+    const deployedAddress = await market.getDeployedMarketContractAddressFromTxHash(
+      web3.eth.accounts[1],
+      txHash,
+      0
+    );
 
+    deployMarketContract = await MarketContractOraclize.createAndValidate(web3, deployedAddress);
     expect(await deployMarketContract.CONTRACT_NAME).toEqual(contractName);
     expect(await deployMarketContract.COLLATERAL_TOKEN_ADDRESS).toEqual(collateralTokenAddress);
     expect(await deployMarketContract.creator).toEqual(web3.eth.accounts[1]);
@@ -73,5 +79,14 @@ describe('Deployment Tests', () => {
     expect(await deployMarketContract.MARKET_COLLATERAL_POOL_ADDRESS).not.toEqual(
       '0x0000000000000000000000000000000000000000'
     );
+
+    const contractMetaData = await market.getContractMetaDataAsync(deployMarketContract.address);
+    expect(contractMetaData.contractName).toEqual(await deployMarketContract.CONTRACT_NAME);
+    expect(contractMetaData.creator).toEqual(web3.eth.accounts[1]);
+    expect(contractMetaData.expirationTimeStamp).toEqual(await deployMarketContract.EXPIRATION);
+    expect(contractMetaData.oracleDataSource).toEqual(
+      await deployMarketContract.ORACLE_DATA_SOURCE
+    );
+    expect(contractMetaData.oracleQuery).toEqual(await deployMarketContract.ORACLE_QUERY);
   });
 });

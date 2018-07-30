@@ -1,4 +1,4 @@
-import { BigNumber } from 'bignumber.js';
+import BigNumber from 'bignumber.js';
 import Web3 from 'web3';
 // @ts-ignore // allow any type for web3-fake-provider.
 import FakeProvider from 'web3-fake-provider';
@@ -49,5 +49,33 @@ describe('Utils library', () => {
     expect(salt.isGreaterThanOrEqualTo(0)).toBeTruthy();
     const twoPow256 = new BigNumber(2).pow(256);
     expect(salt.isLessThan(twoPow256)).toBeTruthy();
+  });
+
+  it('parses a contract name correctly', () => {
+    expect(Utils.parseStandardizedContractName('EXPECT_TO_FAIL')).toBeNull();
+    expect(Utils.parseStandardizedContractName('EXPECT_TO_FAIL_NAN_FAIL')).toBeDefined();
+    expect(Utils.parseStandardizedContractName('EXPECT_TO_FAIL_505_FAIL')).toBeDefined();
+
+    const parsedName = Utils.parseStandardizedContractName('BTC_USDT_BIN_123_PE');
+    expect(parsedName).toBeDefined();
+    if (!parsedName) {
+      return;
+    }
+    expect(parsedName.referenceAsset).toBe('BTC');
+    expect(parsedName.collateralToken).toBe('USDT');
+    expect(parsedName.dataProvider).toBe('BIN');
+    expect(parsedName.expirationTimeStamp).toEqual(new BigNumber(123));
+    expect(parsedName.userText).toBe('PE');
+  });
+
+  it('creates a contract name correctly', () => {
+    const contractName: string = Utils.createStandardizedContractName(
+      'BTC',
+      'USDT',
+      'BIN',
+      new BigNumber(123),
+      'PE'
+    );
+    expect(contractName).toEqual('BTC_USDT_BIN_123_PE');
   });
 });

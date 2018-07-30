@@ -16,7 +16,7 @@ import {
  * @param {MarketCollateralPoolFactory} marketCollateralPoolFactory
  * @param {string} marketContractAddress
  * @param {ITxParams} txParams
- * @returns {Promise<string>}                   transaction has of successful deployment.
+ * @returns {Promise<string>}                   transaction has of pending deployment.
  */
 export async function deployMarketCollateralPoolAsync(
   provider: Provider,
@@ -32,7 +32,6 @@ export async function deployMarketCollateralPoolAsync(
 /**
  * calls our factory that deploys a MarketContractOraclize and then adds it to
  * the MarketContractRegistry.
- * @param {Provider} provider                     Web3 provider instance.
  * @param {MarketContractFactoryOraclize} marketContractFactory
  * @param {string} contractName
  * @param {string} collateralTokenAddress
@@ -40,10 +39,9 @@ export async function deployMarketCollateralPoolAsync(
  * @param {string} oracleDataSource
  * @param {string} oracleQuery
  * @param {ITxParams} txParams
- * @returns {Promise<string | BigNumber>}         deployed address of the new Market Contract.
+ * @returns {Promise<string>}         transaction hash of pending transaction.
  */
 export async function deployMarketContractOraclizeAsync(
-  provider: Provider,
   marketContractFactory: MarketContractFactoryOraclize,
   contractName: string,
   collateralTokenAddress: string,
@@ -51,11 +49,8 @@ export async function deployMarketContractOraclizeAsync(
   oracleDataSource: string,
   oracleQuery: string,
   txParams: ITxParams = {}
-): Promise<string | BigNumber> {
-  const web3: Web3 = new Web3();
-  web3.setProvider(provider);
-
-  const txHash = await marketContractFactory
+): Promise<string> {
+  return marketContractFactory
     .deployMarketContractOraclizeTx(
       contractName,
       collateralTokenAddress,
@@ -64,22 +59,36 @@ export async function deployMarketContractOraclizeAsync(
       oracleQuery
     )
     .send(txParams);
+}
 
-  const blockNumber: number = Number(web3.eth.getTransaction(txHash).blockNumber);
-
-  return new Promise<string | BigNumber>((resolve, reject) => {
+/**
+ * Watches for the MarketContractCreatedEvent and attempts to return the new address of the
+ * market contract created in the supplied tx Hash.
+ * @param marketContractFactory
+ * @param from
+ * @param txHash
+ * @param fromBlock
+ */
+export async function getDeployedMarketContractAddressFromTxHash(
+  marketContractFactory: MarketContractFactoryOraclize,
+  from: string,
+  txHash: string,
+  fromBlock: number
+): Promise<string> {
+  return new Promise<string>((resolve, reject) => {
     const stopEventWatcher = marketContractFactory
-      .MarketContractCreatedEvent({ creator: txParams.from }) // filter based on creator
-      .watch({ fromBlock: blockNumber, toBlock: blockNumber }, (err, eventLog) => {
+      .MarketContractCreatedEvent({ creator: from }) // filter based on creator
+      .watch({ fromBlock: fromBlock }, (err, eventLog) => {
         // Validate this tx hash matches the tx we just created above.
         if (err) {
           console.log(err);
+          return Promise.reject(err);
         }
 
         if (eventLog.transactionHash === txHash) {
           stopEventWatcher()
             .then(function() {
-              return resolve(eventLog.args.contractAddress);
+              return resolve(String(eventLog.args.contractAddress));
             })
             .catch(reject);
         }

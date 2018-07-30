@@ -19,7 +19,8 @@ import { assert } from './assert';
 
 import {
   deployMarketCollateralPoolAsync,
-  deployMarketContractOraclizeAsync
+  deployMarketContractOraclizeAsync,
+  getDeployedMarketContractAddressFromTxHash
 } from './lib/Deployment';
 
 import {
@@ -31,6 +32,7 @@ import {
 import { OrderTransactionInfo } from './lib/OrderTransactionInfo';
 import { MARKETProtocolArtifacts } from './MARKETProtocolArtifacts';
 import { OraclizeContractWrapper } from './contract_wrappers/OraclizeContractWrapper';
+import { OraclizeContractMetaData } from './types/ContractMetaData';
 
 /**
  * The `Market` class is the single entry-point into the MARKET.js library.
@@ -266,6 +268,16 @@ export class Market {
   }
 
   /**
+   * Gets contract meta data for the supplied market contract address.
+   * @param marketContractAddress
+   */
+  public async getContractMetaDataAsync(
+    marketContractAddress: string
+  ): Promise<OraclizeContractMetaData> {
+    return this.marketContractWrapper.getContractMetaDataAsync(marketContractAddress);
+  }
+
+  /**
    * Get all whilelisted contracts
    * @returns {Promise<string>}               The user's currently unallocated token balance
    */
@@ -307,7 +319,7 @@ export class Market {
    * marketContractAddress.
    * @param {string} marketContractAddress
    * @param {ITxParams} txParams
-   * @returns {Promise<string>}                   Transaction of successful deployment.
+   * @returns {Promise<string>}                   Transaction of pending deployment.
    */
   public async deployMarketCollateralPoolAsync(
     marketContractAddress: string,
@@ -330,7 +342,7 @@ export class Market {
    * @param {string} oracleDataSource
    * @param {string} oracleQuery
    * @param {ITxParams} txParams
-   * @returns {Promise<string | BigNumber>}         Deployed address of the new Market Contract.
+   * @returns {Promise<string>}         txHash of the pending transaction
    */
   public async deployMarketContractOraclizeAsync(
     contractName: string,
@@ -339,9 +351,8 @@ export class Market {
     oracleDataSource: string,
     oracleQuery: string,
     txParams: ITxParams = {}
-  ): Promise<string | BigNumber> {
+  ): Promise<string> {
     return deployMarketContractOraclizeAsync(
-      this._web3.currentProvider,
       this.marketContractFactory,
       contractName,
       collateralTokenAddress,
@@ -349,6 +360,26 @@ export class Market {
       oracleDataSource,
       oracleQuery,
       txParams
+    );
+  }
+
+  /***
+   * Watches for the MarketContractCreatedEvent and attempts to return the new address of the
+   * market contract created in the supplied tx Hash.
+   * @param from
+   * @param txHash
+   * @param fromBlock
+   */
+  public async getDeployedMarketContractAddressFromTxHash(
+    from: string,
+    txHash: string,
+    fromBlock: number
+  ): Promise<string> {
+    return getDeployedMarketContractAddressFromTxHash(
+      this.marketContractFactory,
+      from,
+      txHash,
+      fromBlock
     );
   }
 

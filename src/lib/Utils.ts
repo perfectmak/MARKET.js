@@ -6,6 +6,7 @@ import { Artifact, ECSignature } from '@marketprotocol/types';
 
 import { constants } from '../constants';
 import fs from 'fs';
+import { ParsedContractName } from '../types';
 
 export const Utils = {
   /**
@@ -112,6 +113,62 @@ export const Utils = {
    */
   loadArtifact(filePath: string): Artifact {
     return JSON.parse(fs.readFileSync(filePath, `utf-8`));
+  },
+
+  /**
+   * Creates a standardized contract name in the format of
+   * REFERENCEASSET_COLLATERALSYMBOL_DATAPROVIDER_EXPIRATION_USERTEXT
+   * @param referenceAssetName
+   * @param collateralTokenSymbol
+   * @param dataProvider
+   * @param expiration
+   * @param userText
+   */
+  createStandardizedContractName(
+    referenceAssetName: string,
+    collateralTokenSymbol: string,
+    dataProvider: string,
+    expiration: BigNumber,
+    userText: string
+  ): string {
+    return referenceAssetName
+      .toUpperCase()
+      .concat(
+        '_',
+        collateralTokenSymbol.toUpperCase(),
+        '_',
+        dataProvider.toUpperCase(),
+        '_',
+        expiration.toString(),
+        '_',
+        userText.toUpperCase()
+      );
+  },
+
+  /**
+   * Parses a standardized contract name into its components.
+   * @param contractName
+   */
+  parseStandardizedContractName(contractName: string): ParsedContractName | null {
+    let splitName: string[] = contractName.split('_');
+    if (splitName.length < 4) {
+      return null;
+    }
+
+    let expiration;
+    try {
+      expiration = new BigNumber(splitName[3]);
+    } catch (err) {
+      return null;
+    }
+
+    return {
+      referenceAsset: splitName[0],
+      collateralToken: splitName[1],
+      dataProvider: splitName[2],
+      expirationTimeStamp: expiration,
+      userText: splitName.length > 4 ? splitName[4] : '' // user text could be optional
+    };
   }
 };
 

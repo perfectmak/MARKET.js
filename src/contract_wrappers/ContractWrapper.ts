@@ -23,6 +23,7 @@ import { createOrderHashAsync, isValidSignatureAsync } from '../lib/Order';
 import { OrderTransactionInfo } from '../lib/OrderTransactionInfo';
 import { ContractSet } from './ContractSet';
 import { Market } from '../Market';
+import { ContractMetaData } from '../types/ContractMetaData';
 
 const Decoder = require('ethereum-input-data-decoder');
 
@@ -251,6 +252,8 @@ export class ContractWrapper {
       )
       .send(txParams);
 
+    // is this ever going to return a block number correctly since the tx was just submitted?
+    // maybe it would be better to just grab the current block number, before we submit the tx?
     const blockNumber: number = Number(this._web3.eth.getTransaction(txHash).blockNumber);
 
     return Promise.resolve(
@@ -298,6 +301,18 @@ export class ContractWrapper {
       marketContractAddress
     );
     return contractSetWrapper.marketContract.PRICE_DECIMAL_PLACES;
+  }
+
+  /**
+   * Gets contract meta data for the supplied market contract address.
+   * @param marketContractAddress
+   * @returns {Promise<ContractMetaData>}
+   */
+  public async getContractMetaDataAsync(marketContractAddress: string): Promise<ContractMetaData> {
+    const contractSet: ContractSet = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+    return contractSet.getContractMetaDataAsync();
   }
   // endregion //Public Methods
 

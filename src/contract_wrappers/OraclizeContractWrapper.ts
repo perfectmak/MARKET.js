@@ -8,6 +8,7 @@ import { ContractSet } from './ContractSet';
 import { OraclizeContractSet } from './OraclizeContractSet';
 import { ContractWrapper } from './ContractWrapper';
 import { Market } from '../Market';
+import { ContractMetaData, OraclizeContractMetaData } from '../types/ContractMetaData';
 
 /**
  * Wrapper for our MarketContractOraclize objects.  This wrapper exposes all needed functionality of the
@@ -82,6 +83,20 @@ export class OraclizeContractWrapper extends ContractWrapper {
       marketContractAddress
     );
     return contractSetWrapper.marketContractOraclize.isSettled;
+  }
+
+  /**
+   * Gets contract meta data for the supplied market contract address.
+   * @param marketContractAddress
+   * @returns {Promise<OraclizeContractMetaData>}
+   */
+  public async getContractMetaDataAsync(
+    marketContractAddress: string
+  ): Promise<OraclizeContractMetaData> {
+    const contractSet: OraclizeContractSet = await this._getContractSetByMarketContractAddressAsync(
+      marketContractAddress
+    );
+    return contractSet.getContractMetaDataAsync();
   }
 
   // endregion //Public Methods
