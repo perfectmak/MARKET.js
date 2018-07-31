@@ -319,19 +319,18 @@ describe('Collateral', () => {
         'latest',
         '0x0'
       );
+
       const includes: boolean = events.some(
         (e): boolean => {
-          if (
+          return (
             depositAmount.isEqualTo(e.amount) &&
             e.to === collateralPoolAddress &&
             e.type === 'deposit' &&
             e.from === maker
-          ) {
-            return true;
-          }
-          return false;
+          );
         }
       );
+
       expect(includes).toBe(false);
     });
 
@@ -342,15 +341,12 @@ describe('Collateral', () => {
       const events = await market.getCollateralEventsAsync(marketContractAddress);
       const includes: boolean = events.some(
         (e): boolean => {
-          if (
+          return (
             depositAmount.isEqualTo(e.amount) &&
             e.to === maker &&
             e.type === 'withdrawal' &&
             e.from === collateralPoolAddress
-          ) {
-            return true;
-          }
-          return false;
+          );
         }
       );
       expect(includes).toBe(true);
@@ -461,10 +457,10 @@ describe('Collateral', () => {
       );
       expect(userPositionCount.toNumber()).toEqual(1);
 
-      const userPosition: BigNumber = await market.getUserPositionAsync(
+      const userPosition: BigNumber[] = await market.getUserPositionAsync(
         marketContractAddress,
         maker,
-        userPositionCount - 1
+        userPositionCount.toNumber() - 1
       );
       expect(userPosition).toEqual([new BigNumber(100000), new BigNumber(2)]);
     });

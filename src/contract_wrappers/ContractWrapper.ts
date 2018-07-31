@@ -12,7 +12,7 @@ import {
   OrderLib,
   SignedOrder
 } from '@marketprotocol/types';
-import { CollateralEvent, MarketError } from '../types';
+import { CollateralEvent, ContractMetaData, MarketError } from '../types';
 import { Transaction } from '@0xproject/types';
 import { assert } from '../assert';
 
@@ -22,7 +22,6 @@ import { createOrderHashAsync, isValidSignatureAsync } from '../lib/Order';
 import { OrderTransactionInfo } from '../lib/OrderTransactionInfo';
 import { ContractSet } from './ContractSet';
 import { Market } from '../Market';
-import { ContractMetaData } from '../types/ContractMetaData';
 
 const Decoder = require('ethereum-input-data-decoder');
 

@@ -1,6 +1,6 @@
 {
   "name": "@marketprotocol/marketjs",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "library for interacting with MARKET Protocol Smart Contracts",
   "keywords": [
     "MARKET Protocol",
@@ -39,7 +39,7 @@
     "lint": "tslint -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
     "lint:fix": "tslint --fix -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
     "prebuild": "rimraf dist",
-    "build": "tsc --module commonjs && rollup -c rollup.config.ts && typedoc --out docs --target es6 --theme minimal --mode file src",
+    "build": "tsc --module commonjs && rollup -c rollup.config.ts && npm run typedoc && git add .",
     "start": "rollup -c rollup.config.ts -w",
     "test": "jest --runInBand",
     "test:watch": "jest --watch --runInBand",
@@ -49,8 +49,9 @@
     "commit": "git-cz",
     "semantic-release": "semantic-release",
     "semantic-release-prepare": "ts-node tools/semantic-release-prepare",
-    "precommit": "lint-staged",
-    "coverage": "npm run test -- --coverage --no-cache --verbose"
+    "precommit": "lint-staged && npm run build",
+    "coverage": "npm run test -- --coverage --no-cache --verbose",
+    "typedoc": "typedoc --out docs --target es6 --theme minimal --mode file src --sourcefile-url-prefix 'https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/'"
   },
   "lint-staged": {
     "{src,test}/**/*.ts": [
@@ -157,6 +158,7 @@
     "tslint-config-prettier": "^1.13.0",
     "tslint-config-standard": "^7.0.0",
     "typedoc": "^0.11.1",
+    "typedoc-plugin-sourcefile-url": "^1.0.3",
     "typescript": "^2.9.1",
     "validate-commit-msg": "^2.14.0",
     "web3-fake-provider": "^0.1.0"
