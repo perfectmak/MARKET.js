@@ -393,7 +393,7 @@ export class Market {
     fromBlock: number | string = '0x0',
     toBlock: number | string = 'latest',
     userAddress: string | null = null,
-    side: 'maker' | 'taker' | 'any'
+    side: 'maker' | 'taker' | 'any' = 'any',
   ): Promise<OrderFilledEvent[]> {
     return this.marketContractWrapper.getContractFillsAsync(
       marketContractAddress,

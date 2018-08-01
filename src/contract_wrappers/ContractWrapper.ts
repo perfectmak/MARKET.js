@@ -315,7 +315,7 @@ export class ContractWrapper {
     fromBlock: number | string = '0x0',
     toBlock: number | string = 'latest',
     userAddress: string | null = null,
-    side: 'maker' | 'taker' | 'any'
+    side: 'maker' | 'taker' | 'any' = 'any',
   ): Promise<OrderFilledEvent[]> {
     const contractSetWrapper: ContractSet = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
@@ -323,11 +323,12 @@ export class ContractWrapper {
 
     let orderFilledEvents: OrderFilledEvent[] = [];
 
-    const logs = await contractSetWrapper.marketContract.OrderFilledEvent({}).get({
+    const events = await contractSetWrapper.marketContract.OrderFilledEvent({}).get({
       fromBlock: fromBlock,
       toBlock: toBlock
     });
-    for (let e of logs) {
+
+    for (let e of events) {
       const transaction = await new Promise<Transaction>((resolve, reject) => {
         this._web3.eth.getTransaction(e.transactionHash, (err: Error, tx: Transaction) => {
           if (err) {
@@ -336,25 +337,25 @@ export class ContractWrapper {
           resolve(tx);
         });
       });
-      const decoder = new Decoder(contractSetWrapper.marketCollateralPool.contractAbi);
-      const input = decoder.decodeData(transaction.input);
+      
       const event: OrderFilledEvent = {
-        maker: input.maker,
-        taker: input.taker,
-        feeRecipient: input.feeRecipient,
-        filledQty: input.filledQty,
-        paidMakerFee: input.paidMakerFee,
-        paidTakerFee: input.paidTakerFee,
-        price: input.price,
+        maker: e.args.maker,
+        taker: e.args.taker,
+        feeRecipient: e.args.feeRecipient,
+        filledQty: e.args.filledQty,
+        paidMakerFee: e.args.paidMakerFee,
+        paidTakerFee: e.args.paidTakerFee,
+        price: e.args.price,
+        orderHash: e.args.orderHash,
         blockNumber: transaction.blockNumber,
         txHash: transaction.hash
       };
       if (!userAddress) {
         orderFilledEvents.push(event);
       } else if (
-        (side === 'maker' && userAddress === input.maker) ||
-        (side === 'taker' && userAddress === input.taker) ||
-        (side === 'any' && (userAddress === input.maker || userAddress === input.taker))
+        (side === 'maker' && userAddress === e.args.maker) ||
+        (side === 'taker' && userAddress === e.args.taker) ||
+        (side === 'any' && (userAddress === e.args.maker || userAddress === e.args.taker))
       ) {
         orderFilledEvents.push(event);
       }

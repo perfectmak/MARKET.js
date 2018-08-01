@@ -8,6 +8,7 @@ export interface OrderFilledEvent {
   paidMakerFee: BigNumber;
   paidTakerFee: BigNumber;
   price: BigNumber;
+  orderHash: string;
   txHash: string;
   blockNumber: number | null;
 }
