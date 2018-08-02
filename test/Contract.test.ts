@@ -42,6 +42,7 @@ describe('Contract Fills', () => {
 
   beforeAll(async () => {
     jest.setTimeout(30000);
+    snapshotId = await createEVMSnapshot(web3);
     market = new Market(web3.currentProvider, config);
     const contractAddresses: string[] = await market.marketContractRegistry.getAddressWhiteList;
     const expirationTimestamp = new BigNumber(Math.floor(Date.now() / 1000) + 60 * 60);
@@ -165,10 +166,6 @@ describe('Contract Fills', () => {
 
     const fills = await market.getContractFillsAsync(contractAddress);
     lastFill = fills[fills.length - 1];
-  });
-
-  beforeAll(async () => {
-    snapshotId = await createEVMSnapshot(web3);
   });
 
   afterAll(async () => {
