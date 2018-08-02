@@ -28,7 +28,8 @@ describe('Order filled/cancelled store', async () => {
   let fees: BigNumber;
   let orderQty: BigNumber;
   let price: BigNumber;
-  let snapshotId: string;
+  let testCaseSnapshotId: string;
+  let testSuiteSnapshotId: string;
   let signedOrder: SignedOrder;
 
   beforeAll(async () => {
@@ -36,6 +37,7 @@ describe('Order filled/cancelled store', async () => {
     web3 = new Web3(new Web3.providers.HttpProvider('http://localhost:9545'));
     config = { networkId: constants.NETWORK_ID_TRUFFLE };
     market = new Market(web3.currentProvider, config);
+    testSuiteSnapshotId = await createEVMSnapshot(web3);
     contractAddresses = await market.marketContractRegistry.getAddressWhiteList;
     contractAddress = contractAddresses[0];
     deploymentAddress = web3.eth.accounts[0];
@@ -75,7 +77,7 @@ describe('Order filled/cancelled store', async () => {
 
   beforeEach(async () => {
     // get a snapshot of the current state of the local blockchain
-    snapshotId = await createEVMSnapshot(web3);
+    testCaseSnapshotId = await createEVMSnapshot(web3);
     await collateralToken.transferTx(maker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.approveTx(collateralPoolAddress, initialCredit).send({ from: maker });
     await market.depositCollateralAsync(contractAddress, initialCredit, {
@@ -88,10 +90,16 @@ describe('Order filled/cancelled store', async () => {
     });
   });
 
+  afterAll(async () => {
+    // revert the local blockchain to the state before the test occurred in order to clean up
+    // the environment for further testing.
+    await restoreEVMSnapshot(web3, testSuiteSnapshotId);
+  });
+
   afterEach(async () => {
     // revert the local blockchain to the state before the test occurred in order to clean up
     // the environment for further testing.
-    await restoreEVMSnapshot(web3, snapshotId);
+    await restoreEVMSnapshot(web3, testCaseSnapshotId);
   });
 
   it('Returns the uncached quantity', async () => {
