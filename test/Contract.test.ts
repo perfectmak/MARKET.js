@@ -62,7 +62,7 @@ describe('Contract Fills', () => {
 
     const collateralTokenAddress: string = await deployedMarketContract.COLLATERAL_TOKEN_ADDRESS;
     const collateralToken: ERC20 = await ERC20.createAndValidate(web3, collateralTokenAddress);
-    const initialCredit: BigNumber = new BigNumber(5e23);
+    const initialCredit: BigNumber = new BigNumber(1e24);
 
     await collateralToken.transferTx(maker, initialCredit).send({ from: deploymentAddress });
     await collateralToken.transferTx(taker, initialCredit).send({ from: deploymentAddress });
