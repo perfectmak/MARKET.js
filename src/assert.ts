@@ -2,9 +2,10 @@ import { Schema } from 'jsonschema';
 import * as _ from 'lodash';
 import BigNumber from 'bignumber.js';
 import Web3 from 'web3';
-import util from 'util';
 
+// Types
 import { Provider } from '@0xproject/types';
+import { promisify } from '@marketprotocol/types';
 
 import { SchemaValidator } from './SchemaValidator';
 
@@ -74,16 +75,16 @@ export const assert = {
    *
    * @param {string} variableName
    * @param {string} senderAddress
-   * @param {Provider} provider
+   * @param {Web3} web3
    */
   async isSenderAddressAsync(variableName: string, senderAddress: string, web3: Web3) {
     this.isETHAddressHex(variableName, senderAddress);
 
-    const accounts = await util.promisify(web3.eth.getAccounts)();
+    const accounts = await promisify(web3.eth.getAccounts, []);
     const isSenderAddressAvailable = _.includes(accounts, senderAddress);
     this.assert(
       isSenderAddressAvailable,
-      `Specified ${variableName} ${senderAddress} isn't available through the supplied web3 provider`
+      `Specified ${variableName} ${senderAddress} isn't available through the supplied web3`
     );
   }
 };
