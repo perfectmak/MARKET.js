@@ -14,7 +14,7 @@ import {
 } from '@marketprotocol/types';
 
 import { Transaction } from '@0xproject/types';
-import { CollateralEvent, MarketError, OrderFilledEvent } from '../types/index';
+import { CollateralEvent, MarketError, OrderFilledEvent } from '../types';
 import { assert } from '../assert';
 
 import { Utils } from '../lib/Utils';
