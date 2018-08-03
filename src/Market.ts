@@ -14,7 +14,7 @@ import {
   OrderLib,
   SignedOrder
 } from '@marketprotocol/types';
-import { CollateralEvent, MARKETProtocolConfig } from './types';
+import { CollateralEvent, MARKETProtocolConfig, OrderFilledEvent } from './types';
 import { assert } from './assert';
 
 import {
@@ -379,6 +379,30 @@ export class Market {
     return this.marketContractWrapper.isContractSettledAsync(marketContractAddress);
   }
 
+  /**
+   * Get the history of contract fills for maker,taker or both sides of the trade.
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {string} fromBlock                   from block #
+   * @param {string} toBlock                     to block #
+   * @param {string} userAddress                 only search for fills for a specified address
+   * @param {string} side                        order side: maker | taker | any
+   * @returns {Promise<OrderFilledEvent[]>}
+   */
+  public async getContractFillsAsync(
+    marketContractAddress: string,
+    fromBlock: number | string = '0x0',
+    toBlock: number | string = 'latest',
+    userAddress: string | null = null,
+    side: 'maker' | 'taker' | 'any' = 'any',
+  ): Promise<OrderFilledEvent[]> {
+    return this.marketContractWrapper.getContractFillsAsync(
+      marketContractAddress,
+      fromBlock,
+      toBlock,
+      userAddress,
+      side
+    );
+  }
   // DEPLOYMENT METHODS
 
   /**

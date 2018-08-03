@@ -12,8 +12,9 @@ import {
   OrderLib,
   SignedOrder
 } from '@marketprotocol/types';
-import { CollateralEvent, ContractMetaData, MarketError } from '../types';
+
 import { Transaction } from '@0xproject/types';
+import { CollateralEvent, MarketError, OrderFilledEvent } from '../types';
 import { assert } from '../assert';
 
 import { Utils } from '../lib/Utils';
@@ -302,16 +303,66 @@ export class ContractWrapper {
   }
 
   /**
-   * Gets contract meta data for the supplied market contract address.
-   * @param marketContractAddress
-   * @returns {Promise<ContractMetaData>}
+   * Gets the history of contract fills for maker/taker/or both.
+   * @param {string} marketContractAddress       address of the MarketContract
+   * @param {string} fromBlock                   from block #
+   * @param {string} toBlock                     to block #
+   * @param {string} userAddress                 only search for fills for a specified address
+   * @returns {Promise<OrderFilledEvent[]>}
    */
-  public async getContractMetaDataAsync(marketContractAddress: string): Promise<ContractMetaData> {
-    const contractSet: ContractSet = await this._getContractSetByMarketContractAddressAsync(
+  public async getContractFillsAsync(
+    marketContractAddress: string,
+    fromBlock: number | string = '0x0',
+    toBlock: number | string = 'latest',
+    userAddress: string | null = null,
+    side: 'maker' | 'taker' | 'any' = 'any',
+  ): Promise<OrderFilledEvent[]> {
+    const contractSetWrapper: ContractSet = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
     );
-    return contractSet.getContractMetaDataAsync();
+
+    let orderFilledEvents: OrderFilledEvent[] = [];
+
+    const events = await contractSetWrapper.marketContract.OrderFilledEvent({}).get({
+      fromBlock: fromBlock,
+      toBlock: toBlock
+    });
+
+    for (let e of events) {
+      const transaction = await new Promise<Transaction>((resolve, reject) => {
+        this._web3.eth.getTransaction(e.transactionHash, (err: Error, tx: Transaction) => {
+          if (err) {
+            reject(err);
+          }
+          resolve(tx);
+        });
+      });
+      
+      const event: OrderFilledEvent = {
+        maker: e.args.maker,
+        taker: e.args.taker,
+        feeRecipient: e.args.feeRecipient,
+        filledQty: e.args.filledQty,
+        paidMakerFee: e.args.paidMakerFee,
+        paidTakerFee: e.args.paidTakerFee,
+        price: e.args.price,
+        orderHash: e.args.orderHash,
+        blockNumber: transaction.blockNumber,
+        txHash: transaction.hash
+      };
+      if (!userAddress) {
+        orderFilledEvents.push(event);
+      } else if (
+        (side === 'maker' && userAddress === e.args.maker) ||
+        (side === 'taker' && userAddress === e.args.taker) ||
+        (side === 'any' && (userAddress === e.args.maker || userAddress === e.args.taker))
+      ) {
+        orderFilledEvents.push(event);
+      }
+    }
+    return orderFilledEvents;
   }
+
   // endregion //Public Methods
 
   // region Public Collateral Methods
