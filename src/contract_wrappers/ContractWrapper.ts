@@ -253,7 +253,16 @@ export class ContractWrapper {
 
     // is this ever going to return a block number correctly since the tx was just submitted?
     // maybe it would be better to just grab the current block number, before we submit the tx?
-    const blockNumber: number = Number(this._web3.eth.getTransaction(txHash).blockNumber);
+    const transaction = await new Promise<Transaction>((resolve, reject) => {
+      this._web3.eth.getTransaction(txHash, (err: Error, tx: Transaction) => {
+        if (err) {
+          reject(err);
+        }
+        resolve(tx);
+      });
+    });
+
+    const blockNumber: number = Number(transaction.blockNumber);
 
     return Promise.resolve(
       new OrderTransactionInfo(contractSetWrapper.marketContract, signedOrder, txHash, blockNumber)
@@ -315,7 +324,7 @@ export class ContractWrapper {
     fromBlock: number | string = '0x0',
     toBlock: number | string = 'latest',
     userAddress: string | null = null,
-    side: 'maker' | 'taker' | 'any' = 'any',
+    side: 'maker' | 'taker' | 'any' = 'any'
   ): Promise<OrderFilledEvent[]> {
     const contractSetWrapper: ContractSet = await this._getContractSetByMarketContractAddressAsync(
       marketContractAddress
@@ -337,7 +346,7 @@ export class ContractWrapper {
           resolve(tx);
         });
       });
-      
+
       const event: OrderFilledEvent = {
         maker: e.args.maker,
         taker: e.args.taker,
