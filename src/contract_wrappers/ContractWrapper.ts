@@ -94,8 +94,7 @@ export class ContractWrapper {
       )
       .send(txParams);
 
-    const blockNumber: number = Number(this._web3.eth.getTransaction(txHash).blockNumber);
-    return new OrderTransactionInfo(contractSetWrapper.marketContract, order, txHash, blockNumber);
+    return new OrderTransactionInfo(contractSetWrapper.marketContract, order, txHash);
   }
 
   /**
@@ -262,10 +261,8 @@ export class ContractWrapper {
       });
     });
 
-    const blockNumber: number = Number(transaction.blockNumber);
-
     return Promise.resolve(
-      new OrderTransactionInfo(contractSetWrapper.marketContract, signedOrder, txHash, blockNumber)
+      new OrderTransactionInfo(contractSetWrapper.marketContract, signedOrder, txHash)
     );
   }
 

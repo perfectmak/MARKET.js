@@ -34,19 +34,11 @@ export class OrderTransactionInfo {
    * @param {MarketContract} marketContract   MarketContract for order
    * @param {Order} order                     Order with info to be tracked
    * @param {string} txHash                   hash of transaction in question
-   * @param {number} blockNumber              block number to filter events from
    */
-  public constructor(
-    marketContract: MarketContract,
-    order: Order,
-    txHash: string,
-    blockNumber?: number
-  ) {
+  public constructor(marketContract: MarketContract, order: Order, txHash: string) {
     this._marketContract = marketContract;
     this._order = order;
     this.txHash = txHash;
-    this._fromBlockNumber = blockNumber ? blockNumber : 0;
-    this._toBlockNumber = blockNumber;
   }
 
   // endregion // Constructors
