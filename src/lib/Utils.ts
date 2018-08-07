@@ -5,7 +5,7 @@ import Web3 from 'web3';
 import { Artifact, ECSignature } from '@marketprotocol/types';
 
 import { constants } from '../constants';
-import fs from 'fs';
+const fs = require('fs');
 import { ParsedContractName } from '../types';
 
 export const Utils = {
