@@ -1019,7 +1019,7 @@ img { max-width: 100%; }
 				<a name="constructor" class="tsd-anchor"></a>
 				<h3>constructor</h3>
 				<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
-					<li class="tsd-signature tsd-kind-icon">new <wbr>Order<wbr>Transaction<wbr>Info<span class="tsd-signature-symbol">(</span>marketContract<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">MarketContract</span>, order<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Order</span>, txHash<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="ordertransactioninfo.html" class="tsd-signature-type">OrderTransactionInfo</a></li>
+					<li class="tsd-signature tsd-kind-icon">new <wbr>Order<wbr>Transaction<wbr>Info<span class="tsd-signature-symbol">(</span>marketContract<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">MarketContract</span>, order<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Order</span>, txHash<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, blockNumber<span class="tsd-signature-symbol">?: </span><span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="ordertransactioninfo.html" class="tsd-signature-type">OrderTransactionInfo</a></li>
 				</ul>
 				<ul class="tsd-descriptions">
 					<li class="tsd-description">
@@ -1055,7 +1055,15 @@ img { max-width: 100%; }
 								<h5>txHash: <span class="tsd-signature-type">string</span></h5>
 								<div class="tsd-comment tsd-typography">
 									<div class="lead">
-										<p>hash of transaction in question</p>
+										<p>Hash of transaction in question</p>
+									</div>
+								</div>
+							</li>
+							<li>
+								<h5><span class="tsd-flag ts-flagOptional">Optional</span> blockNumber: <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></h5>
+								<div class="tsd-comment tsd-typography">
+									<div class="lead">
+										<p>blockNumber to filter events on</p>
 									</div>
 								</div>
 							</li>
@@ -1069,8 +1077,8 @@ img { max-width: 100%; }
 			<h2>Properties</h2>
 			<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 				<a name="_fromblocknumber" class="tsd-anchor"></a>
-				<h3><span class="tsd-flag ts-flagPrivate">Private</span> _from<wbr>Block<wbr>Number</h3>
-				<div class="tsd-signature tsd-kind-icon">_from<wbr>Block<wbr>Number<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></div>
+				<h3><span class="tsd-flag ts-flagPrivate">Private</span> <span class="tsd-flag ts-flagOptional">Optional</span> _from<wbr>Block<wbr>Number</h3>
+				<div class="tsd-signature tsd-kind-icon">_from<wbr>Block<wbr>Number<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> =&nbsp;0</span></div>
 				<aside class="tsd-sources">
 					<ul>
 						<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L23">lib/OrderTransactionInfo.ts:23</a></li>
@@ -1100,7 +1108,7 @@ img { max-width: 100%; }
 			<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-private">
 				<a name="_toblocknumber" class="tsd-anchor"></a>
 				<h3><span class="tsd-flag ts-flagPrivate">Private</span> <span class="tsd-flag ts-flagOptional">Optional</span> _to<wbr>Block<wbr>Number</h3>
-				<div class="tsd-signature tsd-kind-icon">_to<wbr>Block<wbr>Number<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">undefined</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">number</span></div>
+				<div class="tsd-signature tsd-kind-icon">_to<wbr>Block<wbr>Number<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">number</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">string</span></div>
 				<aside class="tsd-sources">
 					<ul>
 						<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L24">lib/OrderTransactionInfo.ts:24</a></li>
@@ -1146,7 +1154,7 @@ img { max-width: 100%; }
 				<div class="tsd-signature tsd-kind-icon">cancelled<wbr>Qty<wbr>Async<span class="tsd-signature-symbol">:</span> </div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L78">lib/OrderTransactionInfo.ts:78</a></li>
+						<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L87">lib/OrderTransactionInfo.ts:87</a></li>
 					</ul>
 				</aside>
 				<div class="tsd-comment tsd-typography">
@@ -1161,7 +1169,7 @@ img { max-width: 100%; }
 				<div class="tsd-signature tsd-kind-icon">filled<wbr>Qty<wbr>Async<span class="tsd-signature-symbol">:</span> </div>
 				<aside class="tsd-sources">
 					<ul>
-						<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L55">lib/OrderTransactionInfo.ts:55</a></li>
+						<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L64">lib/OrderTransactionInfo.ts:64</a></li>
 					</ul>
 				</aside>
 				<div class="tsd-comment tsd-typography">
@@ -1183,7 +1191,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L147">lib/OrderTransactionInfo.ts:147</a></li>
+								<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L156">lib/OrderTransactionInfo.ts:156</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -1226,7 +1234,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L111">lib/OrderTransactionInfo.ts:111</a></li>
+								<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L120">lib/OrderTransactionInfo.ts:120</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">
@@ -1270,7 +1278,7 @@ img { max-width: 100%; }
 					<li class="tsd-description">
 						<aside class="tsd-sources">
 							<ul>
-								<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L183">lib/OrderTransactionInfo.ts:183</a></li>
+								<li>Defined in <a href="https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/lib/OrderTransactionInfo.ts#L192">lib/OrderTransactionInfo.ts:192</a></li>
 							</ul>
 						</aside>
 						<div class="tsd-comment tsd-typography">

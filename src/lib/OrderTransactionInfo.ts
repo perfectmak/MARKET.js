@@ -20,8 +20,8 @@ export class OrderTransactionInfo {
 
   private readonly _marketContract: MarketContract;
   private readonly _order: Order;
-  private _fromBlockNumber: number = 0;
-  private _toBlockNumber?: number;
+  private _fromBlockNumber?: number = 0;
+  private _toBlockNumber?: number | string;
 
   // endregion // Members
 
@@ -33,12 +33,21 @@ export class OrderTransactionInfo {
    * Creates a OrderTransactionInfo object with the specified params
    * @param {MarketContract} marketContract   MarketContract for order
    * @param {Order} order                     Order with info to be tracked
-   * @param {string} txHash                   hash of transaction in question
+   * @param {string} txHash                   Hash of transaction in question
+   * @param {number} blockNumber              blockNumber to filter events on
    */
-  public constructor(marketContract: MarketContract, order: Order, txHash: string) {
+  public constructor(
+    marketContract: MarketContract,
+    order: Order,
+    txHash: string,
+    blockNumber?: number
+  ) {
     this._marketContract = marketContract;
     this._order = order;
     this.txHash = txHash;
+    // TODO: setup watcher for blockNumber based on txHash
+    this._fromBlockNumber = blockNumber ? blockNumber : 0;
+    this._toBlockNumber = blockNumber ? blockNumber : 'latest';
   }
 
   // endregion // Constructors
