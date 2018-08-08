@@ -1,6 +1,6 @@
 {
   "name": "@marketprotocol/marketjs",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "library for interacting with MARKET Protocol Smart Contracts",
   "keywords": [
     "MARKET Protocol",
@@ -39,7 +39,7 @@
     "lint": "tslint -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
     "lint:fix": "tslint --fix -t codeFrame 'src/**/*.ts' 'test/**/*.ts'",
     "prebuild": "rimraf dist",
-    "build": "tsc --module commonjs && rollup -c rollup.config.ts && npm run typedoc && git add .",
+    "build": "tsc --module commonjs && rollup -c rollup.config.ts && npm run typedoc",
     "start": "rollup -c rollup.config.ts -w",
     "test": "jest --runInBand",
     "test:watch": "jest --watch --runInBand",
@@ -50,7 +50,7 @@
     "commit": "git-cz",
     "semantic-release": "semantic-release",
     "semantic-release-prepare": "ts-node tools/semantic-release-prepare",
-    "precommit": "lint-staged && npm run build",
+    "precommit": "lint-staged",
     "coverage": "npm run test -- --coverage --no-cache --verbose",
     "typedoc": "typedoc --out docs --target es6 --theme minimal --mode file src --sourcefile-url-prefix 'https://github.com/MARKETProtocol/MARKET.js/tree/develop/src/'"
   },

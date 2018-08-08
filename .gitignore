@@ -12,6 +12,7 @@ compiled
 .rpt2_cache
 .env
 build
+docs
 
 # Ignore JS files
 src/**/*.js
