@@ -393,7 +393,7 @@ export class Market {
     fromBlock: number | string = '0x0',
     toBlock: number | string = 'latest',
     userAddress: string | null = null,
-    side: 'maker' | 'taker' | 'any' = 'any',
+    side: 'maker' | 'taker' | 'any' = 'any'
   ): Promise<OrderFilledEvent[]> {
     return this.marketContractWrapper.getContractFillsAsync(
       marketContractAddress,
@@ -403,6 +403,18 @@ export class Market {
       side
     );
   }
+
+  /**
+   * Retrieves an owner's ERC20 token balance.
+   *
+   * @param {string} tokenAddress The hex encoded contract Ethereum address where the ERC20 token is deployed.
+   * @param {string} ownerAddress The hex encoded user Ethereum address whose balance you would like to check.
+   * @returns {Promise<BigNumber>} The owner's ERC20 token balance in base units.
+   */
+  public async getBalanceAsync(tokenAddress: string, ownerAddress: string): Promise<BigNumber> {
+    return this.marketContractWrapper.getBalanceAsync(tokenAddress, ownerAddress);
+  }
+
   // DEPLOYMENT METHODS
 
   /**

@@ -30,10 +30,12 @@ describe('Market class', () => {
 
   let market: Market;
   let contractAddress: string;
+  let mktTokenAddress: string;
 
   beforeAll(async () => {
     market = new Market(web3.currentProvider, config);
     const contractAddresses: string[] = await market.marketContractRegistry.getAddressWhiteList;
+    mktTokenAddress = market.mktTokenContract.address;
     contractAddress = contractAddresses[0];
   });
 
@@ -80,11 +82,19 @@ describe('Market class', () => {
     expect(result).toBeString();
   });
 
-  it('Returns a contract name', async () => {
+  it('Returns contract price decimal places name', async () => {
     const result: BigNumber = await market.getMarketContractPriceDecimalPlacesAsync(
       contractAddress
     );
     expect(result).toBeDefined();
     expect(result.toNumber()).toBeNumber();
+  });
+
+  it('Returns a tokens balance', async () => {
+    const result: BigNumber = await market.getBalanceAsync(mktTokenAddress, web3.eth.accounts[0]);
+
+    expect(result).toBeDefined();
+    expect(result.toNumber()).toBeNumber();
+    expect(result.toNumber()).not.toEqual(0);
   });
 });
